@@ -71,12 +71,10 @@ glm::mat4 lightSpaceMatrix;
 glm::vec3 smallLight(800, 100, 500);
 //dotCamera
 glm::vec3 dotCameraPos(-20.0f, 250.0f, -20.0f);
-//以摄像机为视角的深度信息
-glm::mat4 cameraProjection, cameraView;
 /////////////////////////////////////////////HeightMap/////////////////////////////////////////////
 //  terrain
 std::vector<float> terrainVertices;
-std::vector<float> terrainTexture, terrainTexCoord;
+std::vector<float> terrainColor, terrainTexCoord;
 std::vector<unsigned int> terrainIndices;
 //  skyBox
 //  water
@@ -186,10 +184,10 @@ void scroll_callback(GLFWwindow *window, double xOffset, double yOffset) {
 
 //  利用高度图生成地形terrain
 void loadHeightMap() {
+    int dwidth, dheight, dn;
     unsigned char *data = stbi_load("textures/DefaultTerrain/Height Map.png",
                                     &width, &height, &nChannels,
                                     0);
-    int dwidth, dheight, dn;
     unsigned char *diffuse = stbi_load("textures/DefaultTerrain/Diffuse.png",
                                        &dwidth, &dheight, &dn,
                                        0);
@@ -217,10 +215,10 @@ void loadHeightMap() {
             //Texcoordds
             terrainVertices.push_back((j) * 1.0f / (float) (width - 1));
             terrainVertices.push_back((i) * 1.0f / (float) (height - 1));
-
-            terrainTexture.push_back((float) color[0] / 255.0f);
-            terrainTexture.push_back((float) color[1] / 255.0f);
-            terrainTexture.push_back((float) color[2] / 255.0f);
+            //Color
+            terrainColor.push_back((float) color[0] / 255.0f);
+            terrainColor.push_back((float) color[1] / 255.0f);
+            terrainColor.push_back((float) color[2] / 255.0f);
         }
     }
 
@@ -416,12 +414,12 @@ void initTerrain() {
     glGenBuffers(1, &terrainTextureVBO);
     glBindBuffer(GL_ARRAY_BUFFER, terrainTextureVBO);
     glBufferData(GL_ARRAY_BUFFER,
-                 terrainTexture.size() * sizeof(float),
-                 &terrainTexture[0],
+                 terrainColor.size() * sizeof(float),
+                 &terrainColor[0],
                  GL_STATIC_DRAW);
-    GLuint terrainTextureLocation = glGetAttribLocation(terrainShader->id, "color");
-    glEnableVertexAttribArray(terrainTextureLocation);
-    glVertexAttribPointer(terrainTextureLocation, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) (nullptr));
+    GLuint terrainColorLocation = glGetAttribLocation(terrainShader->id, "color");
+    glEnableVertexAttribArray(terrainColorLocation);
+    glVertexAttribPointer(terrainColorLocation, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) (nullptr));
 
     glGenBuffers(1, &terrainEBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, terrainEBO);
@@ -570,7 +568,6 @@ void initRobot() {
     LeftLowerArm->generateCube(Red);
     RightLowerLeg->generateCube(Cyan);
     LeftLowerLeg->generateCube(Cyan);
-
 
     // 将物体的顶点数据传递
     bindObjectAndData(Torso, TorsoObject, *robotShader);
@@ -759,91 +756,91 @@ void displayNano(int is) {
 }
 
 void displayRobot(int is) {
-    if (is == RENDER_SHADOW) {
+    glm::mat4 robotView, robotProj;
+    if(is == RENDER_GBUFFER) robotView = camera.getView(),robotProj = projection;
+    else if(is == RENDER_SHADOW) robotView = lightView, robotProj = lightProjection;
+    // 物体的变换矩阵
+    glm::mat4 modelMatrix = glm::mat4(1.0);
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 50, 0));
 
-    } else if (is == RENDER_GBUFFER) {
-        // 物体的变换矩阵
-        glm::mat4 modelMatrix = glm::mat4(1.0);
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 50, 0));
+    // 保持变换矩阵的栈
+    MatrixStack mstack;
 
-        // 保持变换矩阵的栈
-        MatrixStack mstack;
+    // 躯干（这里我们希望机器人的躯干只绕Y轴旋转，所以只计算了RotateY）
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0, 0.0, 0.0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.Torso]), glm::vec3(0.0, 1.0, 0.0));
+    torso(modelMatrix, robotView, robotProj);
 
-        // 躯干（这里我们希望机器人的躯干只绕Y轴旋转，所以只计算了RotateY）
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0, 0.0, 0.0));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.Torso]), glm::vec3(0.0, 1.0, 0.0));
-        torso(modelMatrix, camera, projection);
-
-        mstack.push(modelMatrix); // 保存躯干变换矩阵
-        // 头部（这里我们希望机器人的头部只绕Y轴旋转，所以只计算了RotateY）
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0, robot.TORSO_HEIGHT, 0.0));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.Head]), glm::vec3(0.0, 1.0, 0.0));
-        head(modelMatrix, camera, projection);
-        modelMatrix = mstack.pop(); // 恢复躯干变换矩阵
-
-
-        // =========== 左臂 ===========
-        mstack.push(modelMatrix);   // 保存躯干变换矩阵
-        // 左大臂（这里我们希望机器人的左大臂只绕Z轴旋转，所以只计算了RotateZ，后面同理）
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(-0.5 * robot.TORSO_WIDTH - 0.5 * robot.UPPER_ARM_WIDTH,
-                                                            robot.TORSO_HEIGHT, 0.0));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.LeftUpperArm]), glm::vec3(0.0, 0.0, 1.0));
-        left_upper_arm(modelMatrix, camera, projection);
-
-        // 左小臂
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -robot.LOWER_ARM_HEIGHT, 0.0));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.LeftLowerArm]), glm::vec3(0.0, 0.0, 1.0));
-        left_lower_arm(modelMatrix, camera, projection);
-        modelMatrix = mstack.pop();
-
-        // =========== 右臂 ===========
-        mstack.push(modelMatrix);   // 保存躯干变换矩阵
-        // 右大臂
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(0.5 * robot.TORSO_WIDTH + 0.5 * robot.UPPER_ARM_WIDTH,
-                                                            robot.TORSO_HEIGHT, 0.0));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.RightUpperArm]),
-                                  glm::vec3(0.0, 0.0, 1.0));
-        right_upper_arm(modelMatrix, camera, projection);
-
-        // 右小臂
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -robot.LOWER_ARM_HEIGHT, 0.0));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.RightLowerArm]),
-                                  glm::vec3(0.0, 0.0, 1.0));
-        right_lower_arm(modelMatrix, camera, projection);
-        modelMatrix = mstack.pop();
-
-        // =========== 左腿 ===========
-        // 左大腿
-        mstack.push(modelMatrix);   // 保存躯干变换矩阵
-        modelMatrix = glm::translate(modelMatrix,
-                                     glm::vec3(-0.5 * robot.TORSO_WIDTH + 0.5 * robot.UPPER_LEG_WIDTH, 0, 0.0));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.LeftUpperLeg]), glm::vec3(0.0, 0.0, 1.0));
-        left_upper_leg(modelMatrix, camera, projection);
-
-        // 左小腿
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -robot.LOWER_LEG_HEIGHT, 0.0));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.LeftLowerLeg]), glm::vec3(0.0, 0.0, 1.0));
-        left_lower_leg(modelMatrix, camera, projection);
-        modelMatrix = mstack.pop();
+    mstack.push(modelMatrix); // 保存躯干变换矩阵
+    // 头部（这里我们希望机器人的头部只绕Y轴旋转，所以只计算了RotateY）
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0, robot.TORSO_HEIGHT, 0.0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.Head]), glm::vec3(0.0, 1.0, 0.0));
+    head(modelMatrix, robotView, robotProj);
+    modelMatrix = mstack.pop(); // 恢复躯干变换矩阵
 
 
-        // =========== 右腿 ===========
+    // =========== 左臂 ===========
+    mstack.push(modelMatrix);   // 保存躯干变换矩阵
+    // 左大臂（这里我们希望机器人的左大臂只绕Z轴旋转，所以只计算了RotateZ，后面同理）
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(-0.5 * robot.TORSO_WIDTH - 0.5 * robot.UPPER_ARM_WIDTH,
+                                                        robot.TORSO_HEIGHT, 0.0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.LeftUpperArm]), glm::vec3(0.0, 0.0, 1.0));
+    left_upper_arm(modelMatrix, robotView, robotProj);
 
-        // 右大腿
-        mstack.push(modelMatrix);   // 保存躯干变换矩阵
-        modelMatrix = glm::translate(modelMatrix,
-                                     glm::vec3(0.5 * robot.TORSO_WIDTH - 0.5 * robot.UPPER_LEG_WIDTH, 0, 0.0));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.RightUpperLeg]),
-                                  glm::vec3(0.0, 0.0, 1.0));
-        right_upper_leg(modelMatrix, camera, projection);
+    // 左小臂
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -robot.LOWER_ARM_HEIGHT, 0.0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.LeftLowerArm]), glm::vec3(0.0, 0.0, 1.0));
+    left_lower_arm(modelMatrix, robotView, robotProj);
+    modelMatrix = mstack.pop();
 
-        // 右小腿
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -robot.LOWER_LEG_HEIGHT, 0.0));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.RightLowerLeg]),
-                                  glm::vec3(0.0, 0.0, 1.0));
-        right_lower_leg(modelMatrix, camera, projection);
-        modelMatrix = mstack.pop();
-    }
+    // =========== 右臂 ===========
+    mstack.push(modelMatrix);   // 保存躯干变换矩阵
+    // 右大臂
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.5 * robot.TORSO_WIDTH + 0.5 * robot.UPPER_ARM_WIDTH,
+                                                        robot.TORSO_HEIGHT, 0.0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.RightUpperArm]),
+                              glm::vec3(0.0, 0.0, 1.0));
+    right_upper_arm(modelMatrix, robotView, robotProj);
+
+    // 右小臂
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -robot.LOWER_ARM_HEIGHT, 0.0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.RightLowerArm]),
+                              glm::vec3(0.0, 0.0, 1.0));
+    right_lower_arm(modelMatrix, robotView, robotProj);
+    modelMatrix = mstack.pop();
+
+    // =========== 左腿 ===========
+    // 左大腿
+    mstack.push(modelMatrix);   // 保存躯干变换矩阵
+    modelMatrix = glm::translate(modelMatrix,
+                                 glm::vec3(-0.5 * robot.TORSO_WIDTH + 0.5 * robot.UPPER_LEG_WIDTH, 0, 0.0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.LeftUpperLeg]), glm::vec3(0.0, 0.0, 1.0));
+    left_upper_leg(modelMatrix, robotView, robotProj);
+
+    // 左小腿
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -robot.LOWER_LEG_HEIGHT, 0.0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.LeftLowerLeg]), glm::vec3(0.0, 0.0, 1.0));
+    left_lower_leg(modelMatrix, robotView, robotProj);
+    modelMatrix = mstack.pop();
+
+
+    // =========== 右腿 ===========
+
+    // 右大腿
+    mstack.push(modelMatrix);   // 保存躯干变换矩阵
+    modelMatrix = glm::translate(modelMatrix,
+                                 glm::vec3(0.5 * robot.TORSO_WIDTH - 0.5 * robot.UPPER_LEG_WIDTH, 0, 0.0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.RightUpperLeg]),
+                              glm::vec3(0.0, 0.0, 1.0));
+    right_upper_leg(modelMatrix, robotView, robotProj);
+
+    // 右小腿
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -robot.LOWER_LEG_HEIGHT, 0.0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.RightLowerLeg]),
+                              glm::vec3(0.0, 0.0, 1.0));
+    right_lower_leg(modelMatrix, robotView, robotProj);
+    modelMatrix = mstack.pop();
+
 }
 
 void renderDepthMap() {

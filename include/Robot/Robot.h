@@ -120,7 +120,7 @@ openGLObject RightLowerLegObject;
 openGLObject LeftUpperLegObject;
 openGLObject LeftLowerLegObject;
 
-void drawMesh(glm::mat4 modelMatrix, TriMesh *mesh, openGLObject object, Camera camera, glm::mat4 projection) {
+void drawMesh(glm::mat4 modelMatrix, TriMesh *mesh, openGLObject object, glm::mat4 view, glm::mat4 projection) {
 
     glBindVertexArray(object.vao);
 
@@ -128,7 +128,7 @@ void drawMesh(glm::mat4 modelMatrix, TriMesh *mesh, openGLObject object, Camera 
 
     // 父节点矩阵 * 本节点局部变换矩阵
     glUniformMatrix4fv(object.modelLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-    glUniformMatrix4fv(object.viewLocation, 1, GL_FALSE, glm::value_ptr(camera.getView()));
+    glUniformMatrix4fv(object.viewLocation, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(object.projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
     // 绘制
     glDrawArrays(GL_TRIANGLES, 0, mesh->getPoints().size());
@@ -182,101 +182,101 @@ void bindObjectAndData(TriMesh *mesh, openGLObject &object, Shader shader) {
 }
 
 // 躯体
-void torso(glm::mat4 modelMatrix, Camera camera, glm::mat4 projection) {
+void torso(glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 projection) {
     // 本节点局部变换矩阵
     glm::mat4 instance = glm::mat4(1.0);
     instance = glm::translate(instance, glm::vec3(0.0, 0.5 * robot.TORSO_HEIGHT, 0.0));
     instance = glm::scale(instance, glm::vec3(robot.TORSO_WIDTH, robot.TORSO_HEIGHT, robot.TORSO_WIDTH));
 
     // 乘以来自父物体的模型变换矩阵，绘制当前物体
-    drawMesh(modelMatrix * instance, Torso, TorsoObject, camera, projection);
+    drawMesh(modelMatrix * instance, Torso, TorsoObject, view, projection);
 }
 
 // 头部
-void head(glm::mat4 modelMatrix, Camera camera, glm::mat4 projection) {
+void head(glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 projection) {
     // 本节点局部变换矩阵
     glm::mat4 instance = glm::mat4(1.0);
     instance = glm::translate(instance, glm::vec3(0.0, 0.5 * robot.HEAD_HEIGHT, 0.0));
     instance = glm::scale(instance, glm::vec3(robot.HEAD_WIDTH, robot.HEAD_HEIGHT, robot.HEAD_WIDTH));
 
     // 乘以来自父物体的模型变换矩阵，绘制当前物体
-    drawMesh(modelMatrix * instance, Head, HeadObject, camera, projection);
+    drawMesh(modelMatrix * instance, Head, HeadObject, view, projection);
 }
 
 
 // 左大臂
-void left_upper_arm(glm::mat4 modelMatrix, Camera camera, glm::mat4 projection) {
+void left_upper_arm(glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 projection) {
     // 本节点局部变换矩阵
     glm::mat4 instance = glm::mat4(1.0);
     instance = glm::translate(instance, glm::vec3(0.0, -0.5 * robot.UPPER_ARM_HEIGHT, 0.0));
     instance = glm::scale(instance, glm::vec3(robot.UPPER_ARM_WIDTH, robot.UPPER_ARM_HEIGHT, robot.UPPER_ARM_WIDTH));
 
     // 乘以来自父物体的模型变换矩阵，绘制当前物体
-    drawMesh(modelMatrix * instance, LeftUpperArm, LeftUpperArmObject, camera, projection);
+    drawMesh(modelMatrix * instance, LeftUpperArm, LeftUpperArmObject, view, projection);
 }
 
 
-void left_lower_arm(glm::mat4 modelMatrix, Camera camera, glm::mat4 projection) {
+void left_lower_arm(glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 projection) {
     glm::mat4 instance = glm::mat4(1.0);
     instance = glm::translate(instance, glm::vec3(0.0, -0.5 * robot.LOWER_ARM_HEIGHT, 0.0));
     instance = glm::scale(instance, glm::vec3(robot.LOWER_ARM_WIDTH, robot.LOWER_ARM_HEIGHT, robot.LOWER_ARM_WIDTH));
 
     // 乘以来自父物体的模型变换矩阵，绘制当前物体
-    drawMesh(modelMatrix * instance, LeftLowerArm, LeftLowerArmObject, camera, projection);
+    drawMesh(modelMatrix * instance, LeftLowerArm, LeftLowerArmObject, view, projection);
 }
 
-void right_upper_arm(glm::mat4 modelMatrix, Camera camera, glm::mat4 projection) {
+void right_upper_arm(glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 projection) {
     glm::mat4 instance = glm::mat4(1.0);
     instance = glm::translate(instance, glm::vec3(0.0, -0.5 * robot.UPPER_ARM_HEIGHT, 0.0));
     instance = glm::scale(instance, glm::vec3(robot.UPPER_ARM_WIDTH, robot.UPPER_ARM_HEIGHT, robot.UPPER_ARM_WIDTH));
 
     // 乘以来自父物体的模型变换矩阵，绘制当前物体
-    drawMesh(modelMatrix * instance, RightUpperArm, RightUpperArmObject, camera, projection);
+    drawMesh(modelMatrix * instance, RightUpperArm, RightUpperArmObject, view, projection);
 }
 
-void right_lower_arm(glm::mat4 modelMatrix, Camera camera, glm::mat4 projection) {
+void right_lower_arm(glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 projection) {
     glm::mat4 instance = glm::mat4(1.0);
     instance = glm::translate(instance, glm::vec3(0.0, -0.5 * robot.LOWER_ARM_HEIGHT, 0.0));
     instance = glm::scale(instance, glm::vec3(robot.LOWER_ARM_WIDTH, robot.LOWER_ARM_HEIGHT, robot.LOWER_ARM_WIDTH));
 
     // 乘以来自父物体的模型变换矩阵，绘制当前物体
-    drawMesh(modelMatrix * instance, RightLowerArm, RightLowerArmObject, camera, projection);
+    drawMesh(modelMatrix * instance, RightLowerArm, RightLowerArmObject, view, projection);
 }
 
-void left_upper_leg(glm::mat4 modelMatrix, Camera camera, glm::mat4 projection) {
+void left_upper_leg(glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 projection) {
     glm::mat4 instance = glm::mat4(1.0);
     instance = glm::translate(instance, glm::vec3(0.0, -0.5 * robot.UPPER_LEG_HEIGHT, 0.0));
     instance = glm::scale(instance, glm::vec3(robot.UPPER_LEG_WIDTH, robot.UPPER_LEG_HEIGHT, robot.UPPER_LEG_WIDTH));
 
     // 乘以来自父物体的模型变换矩阵，绘制当前物体
-    drawMesh(modelMatrix * instance, LeftUpperLeg, LeftUpperLegObject, camera, projection);
+    drawMesh(modelMatrix * instance, LeftUpperLeg, LeftUpperLegObject, view, projection);
 }
 
-void left_lower_leg(glm::mat4 modelMatrix, Camera camera, glm::mat4 projection) {
+void left_lower_leg(glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 projection) {
     glm::mat4 instance = glm::mat4(1.0);
     instance = glm::translate(instance, glm::vec3(0.0, -0.5 * robot.LOWER_LEG_HEIGHT, 0.0));
     instance = glm::scale(instance, glm::vec3(robot.LOWER_LEG_WIDTH, robot.LOWER_LEG_HEIGHT, robot.LOWER_LEG_WIDTH));
 
     // 乘以来自父物体的模型变换矩阵，绘制当前物体
-    drawMesh(modelMatrix * instance, LeftLowerLeg, LeftLowerLegObject, camera, projection);
+    drawMesh(modelMatrix * instance, LeftLowerLeg, LeftLowerLegObject, view, projection);
 }
 
-void right_upper_leg(glm::mat4 modelMatrix, Camera camera, glm::mat4 projection) {
+void right_upper_leg(glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 projection) {
     glm::mat4 instance = glm::mat4(1.0);
     instance = glm::translate(instance, glm::vec3(0.0, -0.5 * robot.UPPER_LEG_HEIGHT, 0.0));
     instance = glm::scale(instance, glm::vec3(robot.UPPER_LEG_WIDTH, robot.UPPER_LEG_HEIGHT, robot.UPPER_LEG_WIDTH));
 
     // 乘以来自父物体的模型变换矩阵，绘制当前物体
-    drawMesh(modelMatrix * instance, RightUpperLeg, RightUpperLegObject, camera, projection);
+    drawMesh(modelMatrix * instance, RightUpperLeg, RightUpperLegObject, view, projection);
 }
 
-void right_lower_leg(glm::mat4 modelMatrix, Camera camera, glm::mat4 projection) {
+void right_lower_leg(glm::mat4 modelMatrix, glm::mat4 view, glm::mat4 projection) {
     glm::mat4 instance = glm::mat4(1.0);
     instance = glm::translate(instance, glm::vec3(0.0, -0.5 * robot.LOWER_LEG_HEIGHT, 0.0));
     instance = glm::scale(instance, glm::vec3(robot.LOWER_LEG_WIDTH, robot.LOWER_LEG_HEIGHT, robot.LOWER_LEG_WIDTH));
 
     // 乘以来自父物体的模型变换矩阵，绘制当前物体
-    drawMesh(modelMatrix * instance, RightLowerLeg, RightLowerLegObject, camera, projection);
+    drawMesh(modelMatrix * instance, RightLowerLeg, RightLowerLegObject, view, projection);
 }
 
 #endif //CG_FINAL_ROBOT_H
