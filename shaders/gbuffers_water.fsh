@@ -113,7 +113,8 @@ void main() {
     vec4 skyColor = reflectSky(wave);
     vec4 terrainColor = reflectTerrain(wave);
 
-    vec3 final = vec3(mix(skyColor.rgb, terrainColor.rgb, 0.5));
+//    vec3 final = vec3(mix(skyColor.rgb, terrainColor.rgb, 0.5));
+    vec3 final = vec3(skyColor.rgb);
     final += getBloom(final) * 0.8;
 //    FragColor = vec4(final, 0.8);
     gDiffuseSpecular = vec4(final, 0.8);

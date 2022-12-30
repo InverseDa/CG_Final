@@ -1,6 +1,16 @@
-//
-// Created by 缪克达 on 2022/9/12.
-//
+/*
+        ___                              ____        _        ____ ____
+       |_ _|_ ____   _____ _ __ ___  ___|  _ \  __ _( )___   / ___/ ___|
+        | || '_ \ \ / / _ \ '__/ __|/ _ \ | | |/ _` |// __| | |  | |  _
+        | || | | \ V /  __/ |  \__ \  __/ |_| | (_| | \__ \ | |__| |_| |
+       |___|_| |_|\_/ \___|_|  |___/\___|____/ \__,_| |___/  \____\____|
+
+                    ____  ____   ___      _ _____ ____ _____
+                   |  _ \|  _ \ / _ \    | | ____/ ___|_   _|
+                   | |_) | |_) | | | |_  | |  _|| |     | |
+                   |  __/|  _ <| |_| | |_| | |__| |___  | |
+                   |_|   |_| \_\\___/ \___/|_____\____| |_|
+*/
 
 #include <iostream>
 #include <vector>
@@ -13,15 +23,23 @@
 #include "Texture/Texture.h"
 #include "Model/Model.h"
 #include "GBUFFER/gbuffer.h"
+#include "Robot/Robot.h"
 
-const double PI = 3.1415926;
-const int WATER_VERTICES_HEIGHT_AND_WIDTH = 400;
+#define White    glm::vec3(1.0, 1.0, 1.0)
+#define Yellow    glm::vec3(1.0, 1.0, 0.0)
+#define Green    glm::vec3(0.0, 1.0, 0.0)
+#define Cyan    glm::vec3(0.0, 1.0, 1.0)
+#define Magenta    glm::vec3(1.0, 0.0, 1.0)
+#define Red        glm::vec3(1.0, 0.0, 0.0)
+#define Black    glm::vec3(0.0, 0.0, 0.0)
+#define Blue    glm::vec3(0.0, 0.0, 1.0)
+#define Brown    glm::vec3(0.5, 0.5, 0.5)
+
+const int WATER_VERTICES_HEIGHT_AND_WIDTH = 410;
 const unsigned int WINDOW_WIDTH = 1366, WINDOW_HEIGHT = 768;
 const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-const float near_plane = 1.0f, far_plane = 10.0f;
-
+const float near_plane = 0.1f, far_plane = 100000.0f;
 const int RENDER_SHADOW = 0, RENDER_GBUFFER = 1, RENDER_WATER_VP = 2;
-
 
 /////////////////////////////////////////////Camera/////////////////////////////////////////////
 //  FPS风格摄像机
@@ -71,25 +89,22 @@ int width, height, nChannels;
 unsigned int terrainVAO, terrainVerticesVBO, terrainTextureVBO, terrainTexCoordVBO, terrainEBO,
         skyBoxVAO, skyBoxVBO,
         waterVAO, waterVerticesVBO, waterNormalVBO, waterVerticesEBO,
-        quadVAO, quadVBO,
-        hdrFBO;
-//HDR
-unsigned int colorBuffers[2];
-unsigned int rboDepth;
-unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+        quadVAO, quadVBO;
 //SHADOW
 GLuint shadowMapFBO, shadowMap,
         mirrorFBO, mirrorTex, mirrorDBO[1], mirrorRBO;
 /////////////////////////////////////////////Shaders/////////////////////////////////////////////
 Shader *terrainShader, *skyBoxShader, *waterShader,
         *modelShader, *shadowShader, *debugShadowShader, *sunShader,
-        *composite1Shader, *composite2Shader, *waterReflectionShader;
+        *composite1Shader, *composite2Shader, *waterReflectionShader,
+        *robotShader;
 /////////////////////////////////////////////TextureID/////////////////////////////////////////////
 unsigned int skyBoxTextureID, noisetex, terrainTextureID, terrainSpecular, terrainNormal, waterTextureID;
 /////////////////////////////////////////////Model/////////////////////////////////////////////
 Model tree, sun, nanosuit;
 
-gBuffer *gbuffer, *mirrorBuffer;
+gBuffer *gbuffer;
+
 
 struct screen {
     void Draw(Shader shader) {
@@ -427,6 +442,7 @@ void initShaders() {
     composite1Shader = new Shader("shaders/composite1.vsh", "shaders/composite1.fsh");
     waterReflectionShader = new Shader("shaders/gbuffers_water_reflection.vsh",
                                        "shaders/gbuffers_water_reflection.fsh");
+    robotShader = new Shader("shaders/gbuffers_robot.vsh", "shaders/gbuffers_robot.fsh");
 }
 
 void initModel() {
@@ -435,7 +451,6 @@ void initModel() {
     loadNanoSuit();
 }
 
-//TODO:实现阴影映射，采用帧缓冲
 void initDepthMap() {
     // shadow
     glGenFramebuffers(1, &shadowMapFBO);
@@ -461,7 +476,11 @@ void initDepthMap() {
 
 void initGbuffer() {
     gbuffer = new gBuffer;
-    gbuffer->init(WINDOW_WIDTH * 4, WINDOW_HEIGHT * 4);
+#ifdef __APPLE__
+    gbuffer->init(WINDOW_WIDTH * 2, WINDOW_HEIGHT * 2);
+#else
+    gbuffer->init(WINDOW_WIDTH, WINDOW_HEIGHT);
+#endif
 }
 
 void initMirrorBuffer() {
@@ -489,20 +508,27 @@ void initMirrorBuffer() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
-//  TODO: 实现水体模拟
+void initScreen() {
+    float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+            1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    };
+    // setup plane VAO
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) 0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
+}
+
 void initWater() {
-//    waterVertices = {
-//            1.0, planeZ, 1.0, 1, 1,
-//            -1.0, planeZ, 1.0, 1, 0,
-//            -1.0, planeZ, -1.0, 0, 0,
-//            1.0, planeZ, -1.0, 0, 1
-//    };
-
-//    waterIndices = {
-//            0, 1, 2,
-//            0, 2, 3
-//    };
-
     loadWater();
 
     glGenVertexArrays(1, &waterVAO);
@@ -532,36 +558,31 @@ void initWater() {
     waterTextureID = loadTexture("textures/water.jpg");
 }
 
-void initBloom() {
-    // set up floating point framebuffer to render scene to
-    glGenFramebuffers(1, &hdrFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
-    glGenTextures(2, colorBuffers);
-    for (unsigned int i = 0; i < 2; i++) {
-        glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
-        glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_RGBA16F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGBA, GL_FLOAT, nullptr
-        );
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        // attach texture to framebuffer
-        glFramebufferTexture2D(
-                GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0
-        );
-    }
-    // create and attach depth buffer (renderbuffer)
-    glGenRenderbuffers(1, &rboDepth);
-    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WINDOW_WIDTH, WINDOW_HEIGHT);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-    // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
-    glDrawBuffers(2, attachments);
-    // finally check if framebuffer is complete
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "Framebuffer not complete!" << std::endl;
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+void initRobot() {
+    // 设置物体的大小（初始的旋转和位移都为0）
+    Torso->generateCube(Blue);
+    Head->generateCube(Green);
+    RightUpperArm->generateCube(Yellow);
+    LeftUpperArm->generateCube(Yellow);
+    RightUpperLeg->generateCube(Brown);
+    LeftUpperLeg->generateCube(Brown);
+    RightLowerArm->generateCube(Red);
+    LeftLowerArm->generateCube(Red);
+    RightLowerLeg->generateCube(Cyan);
+    LeftLowerLeg->generateCube(Cyan);
+
+
+    // 将物体的顶点数据传递
+    bindObjectAndData(Torso, TorsoObject, *robotShader);
+    bindObjectAndData(Head, HeadObject, *robotShader);
+    bindObjectAndData(RightUpperArm, RightUpperArmObject, *robotShader);
+    bindObjectAndData(LeftUpperArm, LeftUpperArmObject, *robotShader);
+    bindObjectAndData(RightUpperLeg, RightUpperLegObject, *robotShader);
+    bindObjectAndData(LeftUpperLeg, LeftUpperLegObject, *robotShader);
+    bindObjectAndData(RightLowerArm, RightLowerArmObject, *robotShader);
+    bindObjectAndData(LeftLowerArm, LeftLowerArmObject, *robotShader);
+    bindObjectAndData(RightLowerLeg, RightLowerLegObject, *robotShader);
+    bindObjectAndData(LeftLowerLeg, LeftLowerLegObject, *robotShader);
 }
 
 void displayTerrain(int is) {
@@ -695,14 +716,17 @@ void displayTree(int is) {
         modelShader->set4Matrix("model", model);
         modelShader->set4Matrix("view", view);
         modelShader->set4Matrix("projection", projection);
+        modelShader->setInt("isTree", 1);
         tree.Draw(*modelShader);
+        modelShader->setInt("isTree", 0);
     }
 }
 
 void displaySun(int is) {
     if (isRotate) {
         float radius = 4000;
-        float z = radius * cos(glfwGetTime() * 0.1), y = radius * sin(glfwGetTime() * 0.1);
+        float z = radius * static_cast<float>(cos(glfwGetTime() * 0.1)),
+                y = radius * static_cast<float>(sin(glfwGetTime() * 0.1));
         lightPos.z = z, lightPos.y = y;
     }
     glm::mat4 model = glm::translate(glm::mat4(1.0f), lightPos);
@@ -734,10 +758,92 @@ void displayNano(int is) {
     }
 }
 
-void renderScene() {
-    displayTerrain(RENDER_SHADOW);
-    displayTree(RENDER_SHADOW);
-    displayNano(RENDER_SHADOW);
+void displayRobot(int is) {
+    if (is == RENDER_SHADOW) {
+
+    } else if (is == RENDER_GBUFFER) {
+        // 物体的变换矩阵
+        glm::mat4 modelMatrix = glm::mat4(1.0);
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 50, 0));
+
+        // 保持变换矩阵的栈
+        MatrixStack mstack;
+
+        // 躯干（这里我们希望机器人的躯干只绕Y轴旋转，所以只计算了RotateY）
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0, 0.0, 0.0));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.Torso]), glm::vec3(0.0, 1.0, 0.0));
+        torso(modelMatrix, camera, projection);
+
+        mstack.push(modelMatrix); // 保存躯干变换矩阵
+        // 头部（这里我们希望机器人的头部只绕Y轴旋转，所以只计算了RotateY）
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0, robot.TORSO_HEIGHT, 0.0));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.Head]), glm::vec3(0.0, 1.0, 0.0));
+        head(modelMatrix, camera, projection);
+        modelMatrix = mstack.pop(); // 恢复躯干变换矩阵
+
+
+        // =========== 左臂 ===========
+        mstack.push(modelMatrix);   // 保存躯干变换矩阵
+        // 左大臂（这里我们希望机器人的左大臂只绕Z轴旋转，所以只计算了RotateZ，后面同理）
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(-0.5 * robot.TORSO_WIDTH - 0.5 * robot.UPPER_ARM_WIDTH,
+                                                            robot.TORSO_HEIGHT, 0.0));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.LeftUpperArm]), glm::vec3(0.0, 0.0, 1.0));
+        left_upper_arm(modelMatrix, camera, projection);
+
+        // 左小臂
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -robot.LOWER_ARM_HEIGHT, 0.0));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.LeftLowerArm]), glm::vec3(0.0, 0.0, 1.0));
+        left_lower_arm(modelMatrix, camera, projection);
+        modelMatrix = mstack.pop();
+
+        // =========== 右臂 ===========
+        mstack.push(modelMatrix);   // 保存躯干变换矩阵
+        // 右大臂
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(0.5 * robot.TORSO_WIDTH + 0.5 * robot.UPPER_ARM_WIDTH,
+                                                            robot.TORSO_HEIGHT, 0.0));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.RightUpperArm]),
+                                  glm::vec3(0.0, 0.0, 1.0));
+        right_upper_arm(modelMatrix, camera, projection);
+
+        // 右小臂
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -robot.LOWER_ARM_HEIGHT, 0.0));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.RightLowerArm]),
+                                  glm::vec3(0.0, 0.0, 1.0));
+        right_lower_arm(modelMatrix, camera, projection);
+        modelMatrix = mstack.pop();
+
+        // =========== 左腿 ===========
+        // 左大腿
+        mstack.push(modelMatrix);   // 保存躯干变换矩阵
+        modelMatrix = glm::translate(modelMatrix,
+                                     glm::vec3(-0.5 * robot.TORSO_WIDTH + 0.5 * robot.UPPER_LEG_WIDTH, 0, 0.0));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.LeftUpperLeg]), glm::vec3(0.0, 0.0, 1.0));
+        left_upper_leg(modelMatrix, camera, projection);
+
+        // 左小腿
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -robot.LOWER_LEG_HEIGHT, 0.0));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.LeftLowerLeg]), glm::vec3(0.0, 0.0, 1.0));
+        left_lower_leg(modelMatrix, camera, projection);
+        modelMatrix = mstack.pop();
+
+
+        // =========== 右腿 ===========
+
+        // 右大腿
+        mstack.push(modelMatrix);   // 保存躯干变换矩阵
+        modelMatrix = glm::translate(modelMatrix,
+                                     glm::vec3(0.5 * robot.TORSO_WIDTH - 0.5 * robot.UPPER_LEG_WIDTH, 0, 0.0));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.RightUpperLeg]),
+                                  glm::vec3(0.0, 0.0, 1.0));
+        right_upper_leg(modelMatrix, camera, projection);
+
+        // 右小腿
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -robot.LOWER_LEG_HEIGHT, 0.0));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(robot.theta[robot.RightLowerLeg]),
+                                  glm::vec3(0.0, 0.0, 1.0));
+        right_lower_leg(modelMatrix, camera, projection);
+        modelMatrix = mstack.pop();
+    }
 }
 
 void renderDepthMap() {
@@ -749,41 +855,22 @@ void renderDepthMap() {
     lightSpaceMatrix = lightProjection * lightView;
     shadowShader->use();
     shadowShader->set4Matrix("lightSpaceMatrix", lightSpaceMatrix);
-    shadowShader->setInt("isLight", 1);
 
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
     glClear(GL_DEPTH_BUFFER_BIT);
     glCullFace(GL_FRONT);
-    renderScene();
+    displayTerrain(RENDER_SHADOW);
+    displayTree(RENDER_SHADOW);
+    displayNano(RENDER_SHADOW);
     glCullFace(GL_BACK);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void initDebug() {
-    float quadVertices[] = {
-            // positions        // texture Coords
-            -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-            1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-            1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-    };
-    // setup plane VAO
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) 0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
-}
-
 void debugging() {
     debugShadowShader->use();
-    debugShadowShader->setFloat("near_plane", near_plane);
-    debugShadowShader->setFloat("far_plane", far_plane);
+    debugShadowShader->setFloat("near", near_plane);
+    debugShadowShader->setFloat("far", far_plane);
     debugShadowShader->setInt("depthMap", 0);
 
     glActiveTexture(GL_TEXTURE0);
@@ -800,6 +887,7 @@ void renderGBuffer() {
     displayNano(RENDER_GBUFFER);
     displaySun(RENDER_GBUFFER);
     displayWater(RENDER_GBUFFER);
+    displayRobot(RENDER_GBUFFER);
     displaySkyBox(RENDER_GBUFFER);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -813,21 +901,53 @@ void renderComposite() {
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, gbuffer->gDiffuseSpecular);
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, shadowMap);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->gDepthTex);
     glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, shadowMap);
+    glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, noisetex);
     composite1Shader->setInt("gPosition", 0);
     composite1Shader->setInt("gNormal", 1);
     composite1Shader->setInt("gDiffuseSpecular", 2);
-    composite1Shader->setInt("shadowMap", 3);
-    composite1Shader->setInt("noisetex", 4);
-    composite1Shader->setInt("isTree", 0);
+    composite1Shader->setInt("gDepthTex", 3);
+    composite1Shader->setInt("shadowMap", 4);
+    composite1Shader->setInt("noisetex", 5);
+    composite1Shader->setFloat("near", near_plane);
+    composite1Shader->setFloat("far", far_plane);
     composite1Shader->set4Matrix("lightSpaceMatrix", lightSpaceMatrix);
     composite1Shader->set3Vector("lightPos", smallLight);
     composite1Shader->set3Vector("viewPos", camera.cameraPos);
     composite1Shader->set3Vector("lightColor", lightColor);
     composite1Shader->set3Vector("lightDirection", glm::vec3(0) - smallLight);
     screen.Draw(*composite1Shader);
+}
+
+void freeMemory() {
+    glDeleteProgram(terrainShader->id);
+    glDeleteProgram(skyBoxShader->id);
+    glDeleteProgram(waterShader->id);
+    glDeleteProgram(modelShader->id);
+    glDeleteProgram(shadowShader->id);
+    glDeleteProgram(debugShadowShader->id);
+    glDeleteProgram(sunShader->id);
+    glDeleteProgram(composite1Shader->id);
+//    glDeleteProgram(composite2Shader->id);
+    glDeleteProgram(waterReflectionShader->id);
+    glDeleteProgram(robotShader->id);
+
+    delete terrainShader;
+    delete skyBoxShader;
+    delete waterShader;
+    delete modelShader;
+    delete shadowShader;
+    delete debugShadowShader;
+    delete sunShader;
+    delete composite1Shader;
+    delete composite2Shader;
+    delete waterReflectionShader;
+    delete robotShader;
+
+    delete gbuffer;
 }
 
 /////////////////////////////////////////////main/////////////////////////////////////////////
@@ -842,9 +962,9 @@ int main() {
     loadPerlinNoise();
     initWater();
     initModel();
-    initDebug();
+    initScreen();
+    initRobot();
     initSkyBox();
-//    camera.cameraPos = lightPos;
 
     while (!glfwWindowShouldClose(window)) {
         auto currentFrame = (float) glfwGetTime();
@@ -852,28 +972,29 @@ int main() {
         lastFrame = currentFrame;
 
         processInput(window);
-
-//        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+/////////////////////////previous settings/////////////////////////
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         view = camera.getView();
-        projection = glm::perspective(glm::radians(camera.fov), WINDOW_WIDTH * 1.0f / WINDOW_HEIGHT, 0.1f, 100000.0f);
-//        projection = glm::ortho(-2500.0f, 2500.0f, -2500.0f, 2500.0f, 0.01f, 1000.0f);
+        projection = glm::perspective(glm::radians(camera.fov), WINDOW_WIDTH * 1.0f / WINDOW_HEIGHT, near_plane,
+                                      far_plane);
+/////////////////////////shadowMapping/////////////////////////
         renderDepthMap();
 /////////////////////////rendering/////////////////////////
+#ifdef __APPLE__
+        glViewport(0, 0, WINDOW_WIDTH * 2, WINDOW_HEIGHT * 2);
+#else
+        glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+#endif
         renderGBuffer();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, WINDOW_WIDTH * 20, WINDOW_HEIGHT * 20);
         renderComposite();
-
-/////////////////////////end rendering/////////////////////////
-        // debugger
-        glViewport(WINDOW_WIDTH * 1.5, WINDOW_HEIGHT * 1.5, WINDOW_WIDTH / 3, WINDOW_HEIGHT / 3);
+/////////////////////////debugger/////////////////////////
+        glViewport(0, 0, WINDOW_WIDTH * 2 / 3, WINDOW_HEIGHT * 2 / 3);
         debugging();
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-    glDeleteProgram(terrainShader->id);
-    glDeleteProgram(skyBoxShader->id);
+    freeMemory();
     glfwTerminate();
 }
 

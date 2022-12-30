@@ -17,22 +17,18 @@ out vec4 FragColor;
 
 in vec2 TexCoords;
 
-
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gDiffuseSpecular;
+uniform sampler2D gDepthTex;
 uniform sampler2D shadowMap;
 uniform sampler2D noisetex;
 
 uniform mat4 lightSpaceMatrix;
 
-struct Light {
-    vec3 Position;
-    vec3 Color;
+uniform float near;
+uniform float far;
 
-    float Linear;
-    float Quadratic;
-};
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 lightColor;
@@ -131,12 +127,9 @@ float ShadowCalculation(vec4 fragPos) {
     }
     shadow /= 9.0;
 
-    // Keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
-    if (projCoords.z > 1.0)
-    shadow = 0.0;
+    if (projCoords.z > 1.0) shadow = 0.0;
 
     return shadow;
-    //    return currentDepth > closetDepth ? 1.0 : 0.0;
 }
 
 vec3 phong(vec3 Diffuse, vec3 FragPos, vec3 Normal, float Specular) {
@@ -162,6 +155,10 @@ vec3 phong(vec3 Diffuse, vec3 FragPos, vec3 Normal, float Specular) {
     return result;
 }
 
+float linearizeDepth(float depth, float near, float far) {
+    return (2.0 * near * far) / (far + near - depth * (far - near));
+}
+
 void main()
 {
     // retrieve data from gbuffer
@@ -169,10 +166,12 @@ void main()
     vec3 Diffuse = texture(gDiffuseSpecular, TexCoords).rgb;
     float Specular = texture(gDiffuseSpecular, TexCoords).a;
     vec3 Normal = texture(gNormal, TexCoords).rgb;
+    float depthValue = texture(gDepthTex, TexCoords).r;
+    depthValue = linearizeDepth(depthValue, near, far);
     //        float shadow = ShadowCalculation(vec4(FragPos, 1.0));
     //        float isUnder = dot(normalize(lightDirection), normalize(-Normal));
     vec4 cloud = getCloud(FragPos);
     Diffuse = phong(Diffuse, FragPos, Normal, Specular);
-//    FragColor.rgb = (Diffuse * (1.0 - cloud.a) + cloud.rgb);
+    //    FragColor.rgb = (Diffuse * (1.0 - cloud.a) + cloud.rgb);
     FragColor = vec4(Diffuse, 1.0);
 }

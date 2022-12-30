@@ -51,11 +51,11 @@ vec3 phong() {
 
 void main() {
     //    vec4 color = vec4(phong(), 1.0);
-    //    vec4 tex = texture(texture_diffuse1, fs_in.TexCoords);
-    //    if (isTree == 1 && tex.a < 1.0) discard;
+    vec4 tex = texture(texture_diffuse1, fs_in.TexCoords);
+    if (isTree == 1 && tex.a < 1.0) discard;
     //    FragColor = color;
     gPosition = fs_in.FragPos;
     gNormal = normalize(fs_in.Normal);
-    gDiffuseSpecular.rgb = texture(texture_diffuse1, fs_in.TexCoords).rgb;
+    gDiffuseSpecular.rgb = tex.rgb;
     gDiffuseSpecular.a = texture(texture_specular1, fs_in.TexCoords).r;
 }
