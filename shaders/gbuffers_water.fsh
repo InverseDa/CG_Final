@@ -117,7 +117,7 @@ void main() {
     vec3 final = vec3(skyColor.rgb);
     final += getBloom(final) * 0.8;
 //    FragColor = vec4(final, 0.8);
-    gDiffuseSpecular = vec4(final, 0.8);
+    gDiffuseSpecular = vec4(final, 0.7);
     gNormal = vec3(0.0, 1.0, 1.0);
     gPosition = fs_in.FragPos;
 }

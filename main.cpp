@@ -185,25 +185,25 @@ void scroll_callback(GLFWwindow *window, double xOffset, double yOffset) {
 //  利用高度图生成地形terrain
 void loadHeightMap() {
     int dwidth, dheight, dn;
-    unsigned char *data = stbi_load("textures/DefaultTerrain/Height Map.png",
-                                    &width, &height, &nChannels,
-                                    0);
-    unsigned char *diffuse = stbi_load("textures/DefaultTerrain/Diffuse.png",
-                                       &dwidth, &dheight, &dn,
-                                       0);
+    unsigned char *heightMap = stbi_load("textures/DefaultTerrain/Height Map.png",
+                                         &width, &height, &nChannels,
+                                         0);
+    unsigned char *diffuseMap = stbi_load("textures/DefaultTerrain/Diffuse.png",
+                                          &dwidth, &dheight, &dn,
+                                          0);
 
     terrainTextureID = loadTexture("textures/DefaultTerrain/Diffuse.png");
     terrainSpecular = loadTexture("textures/DefaultTerrain/Height Map_SPEC.png");
     terrainNormal = loadTexture("textures/DefaultTerrain/Height Map_NORM.png");
-    if (!data || !diffuse) {
+    if (!heightMap || !diffuseMap) {
         std::cout << "Error: Load HeightMap Failed! \n";
         exit(0);
     }
     float yScale = 256.0f / 256.0f, yShift = 16.0f;
     for (unsigned int i = 0; i < height; i++) {
         for (unsigned int j = 0; j < width; j++) {
-            unsigned char *texel = data + (i * width + j) * nChannels;
-            unsigned char *color = diffuse + (i * width + j) * dn;
+            unsigned char *texel = heightMap + (i * width + j) * nChannels;
+            unsigned char *color = diffuseMap + (i * width + j) * dn;
 
             unsigned char y = texel[0];
             float xx = -height / 2.0f + i,
@@ -212,17 +212,18 @@ void loadHeightMap() {
             terrainVertices.push_back(xx);
             terrainVertices.push_back(yy);
             terrainVertices.push_back(zz);
-            //Texcoordds
+            //Texcoords
             terrainVertices.push_back((j) * 1.0f / (float) (width - 1));
             terrainVertices.push_back((i) * 1.0f / (float) (height - 1));
-            //Color
+            //Color（弃用）
             terrainColor.push_back((float) color[0] / 255.0f);
             terrainColor.push_back((float) color[1] / 255.0f);
             terrainColor.push_back((float) color[2] / 255.0f);
         }
     }
 
-    stbi_image_free(data);
+    stbi_image_free(heightMap);
+    stbi_image_free(diffuseMap);
 
     //  indices计算
     for (unsigned int i = 0; i < width - 1; i++) {
@@ -757,8 +758,8 @@ void displayNano(int is) {
 
 void displayRobot(int is) {
     glm::mat4 robotView, robotProj;
-    if(is == RENDER_GBUFFER) robotView = camera.getView(),robotProj = projection;
-    else if(is == RENDER_SHADOW) robotView = lightView, robotProj = lightProjection;
+    if (is == RENDER_GBUFFER) robotView = camera.getView(), robotProj = projection;
+    else if (is == RENDER_SHADOW) robotView = lightView, robotProj = lightProjection;
     // 物体的变换矩阵
     glm::mat4 modelMatrix = glm::mat4(1.0);
     modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 50, 0));
@@ -950,8 +951,6 @@ void freeMemory() {
 /////////////////////////////////////////////main/////////////////////////////////////////////
 int main() {
     initGLFW();
-    //  深度测试一定要开启
-    glEnable(GL_DEPTH_TEST);
     initShaders();
     initDepthMap();
     initGbuffer();
@@ -964,6 +963,8 @@ int main() {
     initSkyBox();
 
     while (!glfwWindowShouldClose(window)) {
+        glEnable(GL_DEPTH_TEST);
+
         auto currentFrame = (float) glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -973,7 +974,9 @@ int main() {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         view = camera.getView();
-        projection = glm::perspective(glm::radians(camera.fov), WINDOW_WIDTH * 1.0f / WINDOW_HEIGHT, near_plane,
+        projection = glm::perspective(glm::radians(camera.fov),
+                                      WINDOW_WIDTH * 1.0f / WINDOW_HEIGHT,
+                                      near_plane,
                                       far_plane);
 /////////////////////////shadowMapping/////////////////////////
         renderDepthMap();
@@ -986,6 +989,7 @@ int main() {
         renderGBuffer();
         renderComposite();
 /////////////////////////debugger/////////////////////////
+        glDisable(GL_DEPTH_TEST);
         glViewport(0, 0, WINDOW_WIDTH * 2 / 3, WINDOW_HEIGHT * 2 / 3);
         debugging();
         glfwSwapBuffers(window);
