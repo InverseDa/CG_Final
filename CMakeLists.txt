@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.23)
 project(CG_Final)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address  -fno-omit-frame-pointer -g3")
 
 if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+
     # 暂存环境变量
     set(GLFW_HOME $ENV{GLFW_HOME})
     set(GLAD_HOME $ENV{GLAD_HOME})
@@ -24,16 +25,18 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
     # 链接 GLFW3 预编译库
     link_libraries(glfw)
 
-    # 寻找assimp
+    # 添加 assimp 预编译库
     add_library(assimp SHARED IMPORTED)
     SET_TARGET_PROPERTIES(assimp PROPERTIES IMPORTED_LOCATION "${ASSIMP_HOME}/lib/libassimp.5.2.4.dylib")
-    # 链接assimp库
+    # 链接 assimp 预编译库
     link_libraries(assimp)
 
     add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
+
 endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+
     aux_source_directory("./" PROJECT_SOURCES)
     add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
     target_include_directories(CG_Final PRIVATE include)
@@ -44,4 +47,19 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     ## link
     target_link_libraries(CG_Final PRIVATE glfw)
     target_link_libraries(CG_Final PRIVATE assimp)
+
 endif ()
+
+if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+
+    include_directories(${PROJECT_SOURCE_DIR}/include)
+    add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
+
+    ## dependency
+    find_package(glfw3 CONFIG REQUIRED)
+    find_package(assimp CONFIG REQUIRED)
+    ## link
+    target_link_libraries(CG_Final PRIVATE glfw)
+    target_link_libraries(CG_Final PRIVATE assimp)
+
+endif()
