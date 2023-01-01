@@ -536,7 +536,7 @@ void initWater() {
     glGenBuffers(1, &waterVerticesVBO);
     glBindBuffer(GL_ARRAY_BUFFER, waterVerticesVBO);
     glBufferData(GL_ARRAY_BUFFER,
-                 waterVertices.size() * sizeof(glm::vec3),
+                 waterVertices.size() * sizeof(float),
                  &waterVertices[0],
                  GL_STATIC_DRAW);
     GLuint vertexLocation = glGetAttribLocation(waterShader->id, "aPos");
