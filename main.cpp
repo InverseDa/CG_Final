@@ -990,7 +990,11 @@ int main() {
         renderComposite();
 /////////////////////////debugger/////////////////////////
         glDisable(GL_DEPTH_TEST);
+#ifdef __APPLE__
         glViewport(0, 0, WINDOW_WIDTH * 2 / 3, WINDOW_HEIGHT * 2 / 3);
+#else
+        glViewport(0, 0, WINDOW_WIDTH / 3, WINDOW_HEIGHT / 3);
+#endif
         debugging();
         glfwSwapBuffers(window);
         glfwPollEvents();
