@@ -659,7 +659,7 @@ void displaySkyBox(int is) {
         skyBoxShader->set4Matrix("view", skyView);
         skyBoxShader->set4Matrix("projection", projection);
         skyBoxShader->setInt("skyBox", 0);
-        glDepthFunc(GL_EQUAL);
+        glDepthFunc(GL_LEQUAL);
         glBindVertexArray(skyBoxVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glDepthFunc(GL_LESS);
