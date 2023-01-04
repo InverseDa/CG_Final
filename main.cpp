@@ -59,7 +59,7 @@ bool firstMouse = true;
 bool isRotate = false;
 //  view矩阵
 glm::mat4 view = glm::mat4(1.0f);
-//投影矩阵，实质为透视矩阵
+//  投影矩阵，实质为透视矩阵
 glm::mat4 projection = glm::mat4(1.0f);
 GLFWwindow *window;
 //lightPos
