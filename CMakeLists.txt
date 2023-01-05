@@ -1,11 +1,9 @@
 cmake_minimum_required(VERSION 3.23)
-
 set(CMAKE_CXX_STANDARD 17)
-
 # Google Sanitizer: -fsanitize=undefined -fsanitize=address
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address  -fno-omit-frame-pointer -g3")
 
-if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+if (APPLE)
     project(CG_Final)
     # 暂存环境变量
     set(GLFW_HOME $ENV{GLFW_HOME})
@@ -33,7 +31,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
     add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
 endif ()
 
-if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+if (CMAKE_HOST_UNIX)
     project(CG_Final)
     aux_source_directory("./" PROJECT_SOURCES)
     add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
@@ -47,44 +45,45 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     target_link_libraries(CG_Final PRIVATE assimp)
 endif ()
 
-if (CMAKE_SYSTEM_NAME MATCHES "Windows")
-    if (MINGW)
-        project(CG_Final)
-        message("Checking MINGW...")
-        include_directories(${PROJECT_SOURCE_DIR}/include)
-        add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
-        # dependency
-        find_package(glfw3 CONFIG REQUIRED)
-        find_package(assimp CONFIG REQUIRED)
-        # link
-        target_link_libraries(CG_Final PRIVATE glfw)
-        target_link_libraries(CG_Final PRIVATE assimp)
-        message("Configure done! ")
+if (CMAKE_HOST_WIN32)
+#    if (MINGW)
+#        project(CG_Final)
+#        message("Checking MINGW...")
+#        include_directories(${PROJECT_SOURCE_DIR}/include)
+#        add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
+#        # dependency
+#        find_package(glfw3 CONFIG REQUIRED)
+#        find_package(assimp CONFIG REQUIRED)
+#        # link
+#        target_link_libraries(CG_Final PRIVATE glfw)
+#        target_link_libraries(CG_Final PRIVATE assimp)
+#        message("Configure done! ")
+#    endif ()
+    #    if (MSVC)
+    message("Checking vcpkg...")
+    # vcpkg
+    if (DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+        set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+                CACHE STRING "")
     endif ()
-    if (MSVC)
-        message("Checking vcpkg...")
-        # vcpkg
-        if (DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-            set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-                    CACHE STRING "")
-        endif ()
-        if (DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
-            set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "")
-        endif ()
-
-        project(CG_Final)
-
-        aux_source_directory("./" PROJECT_SOURCES)
-        add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
-        target_include_directories(CG_Final PRIVATE include)
-
-        # dependency
-        find_package(glad CONFIG REQUIRED)
-        find_package(glfw3 CONFIG REQUIRED)
-        find_package(glm CONFIG REQUIRED)
-        # link
-        target_link_libraries(CG_Final PRIVATE glad::glad)
-        target_link_libraries(CG_Final PRIVATE glfw)
-        target_link_libraries(CG_Final PRIVATE glm::glm)
+    if (DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
+        set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "")
     endif ()
+
+    project(CG_Final)
+
+    aux_source_directory("./" PROJECT_SOURCES)
+    add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
+    target_include_directories(CG_Final PRIVATE include)
+
+    # dependency
+    find_package(glad CONFIG REQUIRED)
+    find_package(glfw3 CONFIG REQUIRED)
+    find_package(assimp CONFIG REQUIRED)
+
+    # link
+    target_link_libraries(CG_Final PRIVATE glad::glad)
+    target_link_libraries(CG_Final PRIVATE glfw)
+    target_link_libraries(CG_Final PRIVATE assimp::assimp)
+    #    endif ()
 endif ()
