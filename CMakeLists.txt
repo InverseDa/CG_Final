@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.23)
-project(CG_Final)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -7,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address  -fno-omit-frame-pointer -g3")
 
 if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    project(CG_Final)
     # 暂存环境变量
     set(GLFW_HOME $ENV{GLFW_HOME})
     set(GLAD_HOME $ENV{GLAD_HOME})
@@ -34,6 +34,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    project(CG_Final)
     aux_source_directory("./" PROJECT_SOURCES)
     add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
     target_include_directories(CG_Final PRIVATE include)
@@ -48,6 +49,7 @@ endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
     if (MINGW)
+        project(CG_Final)
         message("Checking MINGW...")
         include_directories(${PROJECT_SOURCE_DIR}/include)
         add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
@@ -69,12 +71,11 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows")
         if (DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
             set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "")
         endif ()
-        if (DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_PREFIX_PATH)
-            set(CMAKE_PREFIX_PATH "$ENV{VCPKG_ROOT}/packages")
-        endif ()
+
+        project(CG_Final)
 
         aux_source_directory("./" PROJECT_SOURCES)
-        add_executable(CG_Final ${PROJECT_SOURCES})
+        add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
         target_include_directories(CG_Final PRIVATE include)
 
         # dependency
