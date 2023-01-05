@@ -29,9 +29,7 @@ if (APPLE)
     link_libraries(assimp)
 
     add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
-endif ()
-
-if (CMAKE_HOST_UNIX)
+elseif(CMAKE_HOST_UNIX)
     project(CG_Final)
     aux_source_directory("./" PROJECT_SOURCES)
     add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
@@ -43,9 +41,7 @@ if (CMAKE_HOST_UNIX)
     # link
     target_link_libraries(CG_Final PRIVATE glfw)
     target_link_libraries(CG_Final PRIVATE assimp)
-endif ()
-
-if (CMAKE_HOST_WIN32)
+elseif(CMAKE_HOST_WIN32)
 #    if (MINGW)
 #        project(CG_Final)
 #        message("Checking MINGW...")
