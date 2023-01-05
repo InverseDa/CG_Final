@@ -48,6 +48,7 @@ endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
     if (MINGW)
+        message("Checking MINGW...")
         include_directories(${PROJECT_SOURCE_DIR}/include)
         add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
         # dependency
@@ -56,8 +57,33 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows")
         # link
         target_link_libraries(CG_Final PRIVATE glfw)
         target_link_libraries(CG_Final PRIVATE assimp)
+        message("Configure done! ")
     endif ()
     if (MSVC)
+        message("Checking vcpkg...")
+        # vcpkg
+        if (DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+            set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+                    CACHE STRING "")
+        endif ()
+        if (DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
+            set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "")
+        endif ()
+        if (DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_PREFIX_PATH)
+            set(CMAKE_PREFIX_PATH "$ENV{VCPKG_ROOT}/packages")
+        endif ()
 
+        aux_source_directory("./" PROJECT_SOURCES)
+        add_executable(CG_Final ${PROJECT_SOURCES})
+        target_include_directories(CG_Final PRIVATE include)
+
+        # dependency
+        find_package(glad CONFIG REQUIRED)
+        find_package(glfw3 CONFIG REQUIRED)
+        find_package(glm CONFIG REQUIRED)
+        # link
+        target_link_libraries(CG_Final PRIVATE glad::glad)
+        target_link_libraries(CG_Final PRIVATE glfw)
+        target_link_libraries(CG_Final PRIVATE glm::glm)
     endif ()
 endif ()
