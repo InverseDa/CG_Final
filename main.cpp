@@ -1,16 +1,16 @@
-/*
-        ___                              ____        _        ____ ____
-       |_ _|_ ____   _____ _ __ ___  ___|  _ \  __ _( )___   / ___/ ___|
-        | || '_ \ \ / / _ \ '__/ __|/ _ \ | | |/ _` |// __| | |  | |  _
-        | || | | \ V /  __/ |  \__ \  __/ |_| | (_| | \__ \ | |__| |_| |
-       |___|_| |_|\_/ \___|_|  |___/\___|____/ \__,_| |___/  \____\____|
 
-                    ____  ____   ___      _ _____ ____ _____
-                   |  _ \|  _ \ / _ \    | | ____/ ___|_   _|
-                   | |_) | |_) | | | |_  | |  _|| |     | |
-                   |  __/|  _ <| |_| | |_| | |__| |___  | |
-                   |_|   |_| \_\\___/ \___/|_____\____| |_|
-*/
+//        ___                              ____        _        ____ ____
+//       |_ _|_ ____   _____ _ __ ___  ___|  _ \  __ _( )___   / ___/ ___|
+//        | || '_ \ \ / / _ \ '__/ __|/ _ \ | | |/ _` |// __| | |  | |  _
+//        | || | | \ V /  __/ |  \__ \  __/ |_| | (_| | \__ \ | |__| |_| |
+//       |___|_| |_|\_/ \___|_|  |___/\___|____/ \__,_| |___/  \____\____|
+//
+//                    ____  ____   ___      _ _____ ____ _____
+//                   |  _ \|  _ \ / _ \    | | ____/ ___|_   _|
+//                   | |_) | |_) | | | |_  | |  _|| |     | |
+//                   |  __/|  _ <| |_| | |_| | |__| |___  | |
+//                   |_|   |_| \_\\___/ \___/|_____\____| |_|
+
 
 #include <iostream>
 #include <vector>
@@ -82,6 +82,8 @@ std::vector<float> waterVertices;
 std::vector<unsigned int> waterIndices;
 //  heightmap arguments
 int width, height, nChannels;
+// dynamicCubeMap
+unsigned int dynamicCubeMapTexture, dynamicCubeMapFrameBuffers[6], dynamicCubeMapTexSize;
 /////////////////////////////////////////////VAO、VBO、EBO/////////////////////////////////////////////
 //  VAO VBO EBO
 unsigned int terrainVAO, terrainVerticesVBO, terrainTextureVBO, terrainTexCoordVBO, terrainEBO,
@@ -581,6 +583,49 @@ void initRobot() {
     bindObjectAndData(LeftLowerArm, LeftLowerArmObject, *robotShader);
     bindObjectAndData(RightLowerLeg, RightLowerLegObject, *robotShader);
     bindObjectAndData(LeftLowerLeg, LeftLowerLegObject, *robotShader);
+}
+
+void initDynamicCubeMap() {
+    dynamicCubeMapTexSize = 1024;
+    glGenTextures(1, &dynamicCubeMapTexture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, dynamicCubeMapTexture);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
+    for(unsigned int i = 0; i < 6; i++) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                     0,
+                     GL_RGB,
+                     dynamicCubeMapTexSize,
+                     dynamicCubeMapTexSize,
+                     0,
+                     GL_RGB,
+                     GL_FLOAT,
+                     nullptr);
+    }
+
+    glGenFramebuffers(6, dynamicCubeMapFrameBuffers);
+    for(unsigned int i = 0; i < 6; i++) {
+        glBindFramebuffer(GL_FRAMEBUFFER, dynamicCubeMapFrameBuffers[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER,
+                               GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                               dynamicCubeMapTexture,
+                               0);
+        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            std::cout << "FrameBuffer ERROR! "<< std::endl;
+        unsigned int rbo;
+        glGenRenderbuffers(1, &rbo);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, dynamicCubeMapTexSize, dynamicCubeMapTexSize);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 void displayTerrain(int is) {
