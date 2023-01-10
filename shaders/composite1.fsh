@@ -170,7 +170,7 @@ vec3 rayTrace(vec3 start, vec3 dir) {
         vec2 uv = screenPos.st;
         if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1)
             break;
-        float depth = linearizeDepth(texture(gDepthTex, uv).r);
+        float depth = (texture(gDepthTex, uv).r);
         if (abs(depth) < abs(screenPos.z))
             return texture(gDiffuseSpecular, uv).rgb;
     }
@@ -190,17 +190,12 @@ void main()
     //    float isUnder = dot(normalize(lightDirection), normalize(-Normal));
     //    vec4 cloud = getCloud(FragPos);
     //    FragColor.rgb = (Diffuse * (1.0 - cloud.a) + cloud.rgb);
-    float depth0 = texture(gDepthTex, TexCoords).x;
-    vec4 positionInNdcCoord0 = vec4(TexCoords * 2-1, depth0*2-1, 1);
-    vec4 positionInClipCoord0 = inverse(projection) * positionInNdcCoord0;
-    vec4 positionInViewCoord0 = vec4(positionInClipCoord0.xyz/positionInClipCoord0.w, 1.0);
-    vec4 positionInWorldCoord0 = inverse(view) * positionInViewCoord0;
-    /****/
 
     if (isWater == vec3(1.0)) {
-        vec3 reflectDir = reflect(positionInViewCoord0.xyz, Normal);
-        vec3 reflectColor = rayTrace(positionInViewCoord0.xyz, reflectDir);
-        FragColor = vec4(reflectColor, 1.0);
+        vec4 positionInViewCoord = view * vec4(FragPos, 1.0);
+        vec3 reflectDir = reflect(-positionInViewCoord.xyz, Normal);
+        vec3 reflectColor = rayTrace(positionInViewCoord.xyz, reflectDir);
+        FragColor = vec4(mix(reflectColor, Diffuse, 0.5), 1.0);
     }
     else {
         Diffuse = phong(Diffuse, FragPos, Normal, Specular);
