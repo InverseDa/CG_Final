@@ -4,6 +4,7 @@ const int noiseTextureResolution = 128;
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec4 gDiffuseSpecular;
+layout (location = 3) out vec4 gWaterTex;
 in VS_OUT {
     vec3 FragPos;
     vec3 Normal;
@@ -59,21 +60,6 @@ vec4 reflectSky(float wave) {
     return skyColor;
 }
 
-vec4 reflectTerrain(float wave) {
-    vec3 newNormal = fs_in.Normal;
-    newNormal.z += 0.05 * (((wave - 0.4) / 0.6) * 2 - 1);
-    newNormal = normalize(newNormal);
-
-    float ratio = 1.00 / 1.33;
-    vec3 I = normalize(fs_in.FragPos - viewPos);
-    vec3 R = reflect(I, normalize(newNormal));
-
-    vec2 ndc = (clipSpace.xy / clipSpace.w) / 2.0 + 0.5;
-    vec2 reflectTexCoords = vec2(ndc.x, -ndc.y);
-    vec4 terrainColor = vec4(texture(tex, R.xz).rgb, 1.0);
-    return terrainColor;
-}
-
 vec4 getBloomColor(vec4 color) {
     float brightness = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
     if(brightness < 0.5) color.rgb = vec3(0);
@@ -111,13 +97,12 @@ void main() {
     float wave = getWave(fs_in.FragPos);
     vec3 color = tex * wave;
     vec4 skyColor = reflectSky(wave);
-    vec4 terrainColor = reflectTerrain(wave);
 
 //    vec3 final = vec3(mix(skyColor.rgb, terrainColor.rgb, 0.5));
     vec3 final = vec3(skyColor.rgb);
-    final += getBloom(final) * 0.8;
-//    FragColor = vec4(final, 0.8);
+//    final += getBloom(final) * 0.8;
     gDiffuseSpecular = vec4(final, 0.7);
     gNormal = vec3(0.0, 1.0, 1.0);
     gPosition = fs_in.FragPos;
+    gWaterTex = vec4(1.0);
 }

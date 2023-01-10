@@ -12,8 +12,8 @@ class gBuffer {
 public:
     GLuint fbo, rbo;
     // 0: Position; 1: Normal; 2: Diffuse + specular
-    GLuint gPosition, gNormal, gDiffuseSpecular, gDepthTex;
-    GLuint DrawBuffers[3];
+    GLuint gPosition, gNormal, gDiffuseSpecular, gDepthTex, gFeatureTex;
+    GLuint DrawBuffers[4];
 
     bool init(unsigned int WINDOW_WIDTH, unsigned int WINDOW_HEIGHT) {
         // create fbo
@@ -40,6 +40,13 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gDiffuseSpecular, 0);
+        // gFeatureTexture
+        glGenTextures(1, &gFeatureTex);
+        glBindTexture(GL_TEXTURE_2D, gFeatureTex);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gFeatureTex, 0);
         // depth color buffer
         glGenTextures(1, &gDepthTex);
         glBindTexture(GL_TEXTURE_2D, gDepthTex);
@@ -54,7 +61,8 @@ public:
         DrawBuffers[0] = GL_COLOR_ATTACHMENT0;
         DrawBuffers[1] = GL_COLOR_ATTACHMENT1;
         DrawBuffers[2] = GL_COLOR_ATTACHMENT2;
-        glDrawBuffers(3, DrawBuffers);
+        DrawBuffers[3] = GL_COLOR_ATTACHMENT3;
+        glDrawBuffers(4, DrawBuffers);
 
 //        // create render buffer
 //        glGenRenderbuffers(1, &rbo);
