@@ -20,6 +20,7 @@ uniform sampler2D gDepthTex;
 uniform sampler2D gWaterTex;
 uniform sampler2D shadowMap;
 uniform sampler2D noisetex;
+uniform sampler2D terrain;
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -163,14 +164,16 @@ vec3 rayTrace(vec3 start, vec3 dir) {
     vec3 point = start;
     int iterations = 20;
     for (int i = 0; i < iterations; i++) {
-        point += dir * 0.2;
+        point += dir * 0.1;
         vec4 screenPos = projection * vec4(point, 1.0);
         screenPos.xyz /= screenPos.w;
         screenPos.xyz = screenPos.xyz * 0.5 + 0.5;
         vec2 uv = screenPos.st;
         if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1)
             break;
-        float depth = (texture(gDepthTex, uv).r);
+//        float depth = gl_FragCoord.z;
+        uv = vec2(uv.x, -uv.y);
+        float depth = texture(gDepthTex,uv).z;
         if (abs(depth) < abs(screenPos.z))
             return texture(gDiffuseSpecular, uv).rgb;
     }
@@ -195,7 +198,7 @@ void main()
         vec4 positionInViewCoord = view * vec4(FragPos, 1.0);
         vec3 reflectDir = reflect(-positionInViewCoord.xyz, Normal);
         vec3 reflectColor = rayTrace(positionInViewCoord.xyz, reflectDir);
-        FragColor = vec4(mix(reflectColor, Diffuse, 0.5), 1.0);
+        FragColor = vec4(reflectColor, 1.0);
     }
     else {
         Diffuse = phong(Diffuse, FragPos, Normal, Specular);
