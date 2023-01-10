@@ -44,7 +44,7 @@ public:
         glGenTextures(1, &gDepthTex);
         glBindTexture(GL_TEXTURE_2D, gDepthTex);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
-                     nullptr);
+                     NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -56,18 +56,18 @@ public:
         DrawBuffers[2] = GL_COLOR_ATTACHMENT2;
         glDrawBuffers(3, DrawBuffers);
 
-        // create render buffer
-        glGenRenderbuffers(1, &rbo);
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WINDOW_WIDTH, WINDOW_HEIGHT);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-        // check
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if (status != GL_FRAMEBUFFER_COMPLETE) {
-            std::cout << "FrameBuffer ERROR: status: " << status << std::endl;
-            return false;
-        }
+//        // create render buffer
+//        glGenRenderbuffers(1, &rbo);
+//        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+//        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WINDOW_WIDTH, WINDOW_HEIGHT);
+//        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo);
+//
+//        // check
+//        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+//        if (status != GL_FRAMEBUFFER_COMPLETE) {
+//            std::cout << "FrameBuffer ERROR: status: " << status << std::endl;
+//            return false;
+//        }
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         return true;
     }
