@@ -1032,8 +1032,6 @@ void renderComposite() {
     glBindTexture(GL_TEXTURE_2D, shadowMap);
     glActiveTexture(GL_TEXTURE6);
     glBindTexture(GL_TEXTURE_2D, noisetex);
-    glActiveTexture(GL_TEXTURE7);
-    glBindTexture(GL_TEXTURE_2D, terrainTextureID);
     composite1Shader->setInt("gPosition", 0);
     composite1Shader->setInt("gNormal", 1);
     composite1Shader->setInt("gDiffuseSpecular", 2);
@@ -1041,7 +1039,6 @@ void renderComposite() {
     composite1Shader->setInt("gFeatureTex", 4);
     composite1Shader->setInt("shadowMap", 5);
     composite1Shader->setInt("noisetex", 6);
-    composite1Shader->setInt("terrain", 7);
     composite1Shader->setFloat("near", near_plane);
     composite1Shader->setFloat("far", far_plane);
     composite1Shader->setFloat("worldTime", glfwGetTime());

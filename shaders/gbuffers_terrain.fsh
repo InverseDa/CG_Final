@@ -3,6 +3,7 @@
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec4 gDiffuseSpecular;
+layout (location = 3) out vec4 gFeatureTex;
 
 const int bottom = 250;
 const int top = 300;
@@ -202,4 +203,5 @@ void main() {
     gNormal = normalize(norm);
     gDiffuseSpecular.rgb = texture(tex, fs_in.TexCoords).rgb;
     gDiffuseSpecular.a = texture(specular, fs_in.TexCoords).r;
+    gFeatureTex = vec4(0.9);
 }

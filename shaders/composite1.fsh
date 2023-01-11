@@ -1,5 +1,8 @@
 #version 330 core
 
+const vec4 water = vec4(1.0);
+const vec4 terrain = vec4(0.9);
+
 const int bottom = 250;
 const int top = 300;
 const int width = 1000;
@@ -22,7 +25,6 @@ uniform sampler2D gDepthTex;
 uniform sampler2D gFeatureTex;
 uniform sampler2D shadowMap;
 uniform sampler2D noisetex;
-uniform sampler2D terrain;
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -210,7 +212,7 @@ void main()
     // retrieve data from gbuffer
     vec3 FragPos = texture(gPosition, TexCoords).rgb;
     vec3 Diffuse = texture(gDiffuseSpecular, TexCoords).rgb;
-    vec3 isWater = texture(gFeatureTex, TexCoords).rgb;
+    vec4 is = texture(gFeatureTex, TexCoords);
     float Specular = texture(gDiffuseSpecular, TexCoords).a;
     vec3 Normal = texture(gNormal, TexCoords).rgb;
     float depthValue = linearizeDepth(texture(gDepthTex, TexCoords).r) / far;
@@ -219,7 +221,7 @@ void main()
     //    vec4 cloud = getCloud(FragPos);
     //    FragColor.rgb = (Diffuse * (1.0 - cloud.a) + cloud.rgb);
 
-    if (isWater == vec3(1.0)) {
+    if (is == water) {
         float wave = getWave(FragPos);
         vec3 newNormal = vec3(0, 1, 0);
         newNormal.z += 0.05 * (((wave - 0.4) / 0.6) * 2 - 1);
