@@ -1038,12 +1038,13 @@ void renderComposite() {
     composite1Shader->setInt("gNormal", 1);
     composite1Shader->setInt("gDiffuseSpecular", 2);
     composite1Shader->setInt("gDepthTex", 3);
-    composite1Shader->setInt("gWaterTex", 4);
+    composite1Shader->setInt("gFeatureTex", 4);
     composite1Shader->setInt("shadowMap", 5);
     composite1Shader->setInt("noisetex", 6);
     composite1Shader->setInt("terrain", 7);
     composite1Shader->setFloat("near", near_plane);
     composite1Shader->setFloat("far", far_plane);
+    composite1Shader->setFloat("worldTime", glfwGetTime());
     composite1Shader->set4Matrix("view", view);
     composite1Shader->set4Matrix("projection", projection);
     composite1Shader->set4Matrix("lightSpaceMatrix", lightSpaceMatrix);

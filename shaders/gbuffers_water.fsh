@@ -4,7 +4,7 @@ const int noiseTextureResolution = 128;
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec4 gDiffuseSpecular;
-layout (location = 3) out vec4 gWaterTex;
+layout (location = 3) out vec4 gFeatureTex;
 in VS_OUT {
     vec3 FragPos;
     vec3 Normal;
@@ -99,10 +99,10 @@ void main() {
     vec4 skyColor = reflectSky(wave);
 
 //    vec3 final = vec3(mix(skyColor.rgb, terrainColor.rgb, 0.5));
-    vec3 final = vec3(skyColor.rgb);
+    vec3 final = skyColor.rgb;
 //    final += getBloom(final) * 0.8;
     gDiffuseSpecular = vec4(final, 0.7);
     gNormal = vec3(0.0, 1.0, 1.0);
     gPosition = fs_in.FragPos;
-    gWaterTex = vec4(1.0);
+    gFeatureTex = vec4(1.0);
 }

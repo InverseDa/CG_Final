@@ -9,6 +9,8 @@ const vec3 baseDark = vec3(0.31, 0.31, 0.32);   // 基础颜色 -- 暗部
 const vec3 lightBright = vec3(1.29, 1.17, 1.05); // 光照颜色 -- 亮部
 const vec3 lightDark = vec3(0.7, 0.75, 0.8);   // 光照颜色 -- 暗部
 
+const int noiseTextureResolution = 128;
+
 out vec4 FragColor;
 
 in vec2 TexCoords;
@@ -17,7 +19,7 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gDiffuseSpecular;
 uniform sampler2D gDepthTex;
-uniform sampler2D gWaterTex;
+uniform sampler2D gFeatureTex;
 uniform sampler2D shadowMap;
 uniform sampler2D noisetex;
 uniform sampler2D terrain;
@@ -28,6 +30,7 @@ uniform mat4 lightSpaceMatrix;
 
 uniform float near;
 uniform float far;
+uniform float worldTime;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
@@ -168,7 +171,7 @@ vec3 rayTrace(vec3 start, vec3 dir) {
     vec3 point = start;
     int iterations = 20;
     for (int i = 0; i < iterations; i++) {
-        point += dir * 0.1;
+        point += dir * 0.2;
         vec4 screenPos = projection * vec4(point, 1.0);
         screenPos.xyz /= screenPos.w;
         screenPos.xyz = screenPos.xyz * 0.5 + 0.5;
@@ -176,11 +179,30 @@ vec3 rayTrace(vec3 start, vec3 dir) {
         if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1)
             break;
 //        float depth = gl_FragCoord.z;
-        float depth = linearizeDepth(texture(gDepthTex,vec2(uv.x, -uv.y)).z);
+        float depth = linearizeDepth(texture(gDepthTex,vec2(uv.x, uv.y)).z);
         if (abs(depth) < abs(screenPos.z))
-            return texture(gDiffuseSpecular, vec2(uv.x, -uv.y)).rgb;
+            return texture(gDiffuseSpecular, vec2(uv.x, uv.y)).rgb;
     }
-    return vec3(0.0);
+    return texture(gDiffuseSpecular, TexCoords).rgb;
+}
+
+float getWave(vec3 pos) {
+    float speed1 = worldTime * 85 / (noiseTextureResolution * 15);
+    vec3 coord1 = pos.xyz / noiseTextureResolution;
+    coord1.x *= 3;
+    coord1.x += speed1;
+    coord1.z += speed1 * 0.2;
+    float noise1 = texture(noisetex, coord1.xz).x;
+
+    // 混合波浪
+    float speed2 = worldTime * 85 / (noiseTextureResolution * 7);
+    vec3 coord2 = pos.xyz / noiseTextureResolution;
+    coord2.x *= 0.5;
+    coord2.x -= speed2 * 0.15 + noise1 * 0.05;  // 加入第一个波浪的噪声
+    coord2.z -= speed2 * 0.7 - noise1 * 0.05;
+    float noise2 = texture(noisetex, coord2.xz).x;
+
+    return noise2 * 0.6 + 0.4;;
 }
 
 void main()
@@ -188,7 +210,7 @@ void main()
     // retrieve data from gbuffer
     vec3 FragPos = texture(gPosition, TexCoords).rgb;
     vec3 Diffuse = texture(gDiffuseSpecular, TexCoords).rgb;
-    vec3 isWater = texture(gWaterTex, TexCoords).rgb;
+    vec3 isWater = texture(gFeatureTex, TexCoords).rgb;
     float Specular = texture(gDiffuseSpecular, TexCoords).a;
     vec3 Normal = texture(gNormal, TexCoords).rgb;
     float depthValue = linearizeDepth(texture(gDepthTex, TexCoords).r) / far;
@@ -198,10 +220,14 @@ void main()
     //    FragColor.rgb = (Diffuse * (1.0 - cloud.a) + cloud.rgb);
 
     if (isWater == vec3(1.0)) {
+        float wave = getWave(FragPos);
+        vec3 newNormal = vec3(0,1,0);
+        newNormal.z += 0.05 * (((wave - 0.4) / 0.6) * 2 - 1);
+        newNormal = normalize(newNormal);
         vec4 positionInViewCoord = view * vec4(FragPos, 1.0);
-        vec3 reflectDir = reflect(-positionInViewCoord.xyz, normalize(Normal));
+        vec3 reflectDir = reflect(-positionInViewCoord.xyz, newNormal);
         vec3 reflectColor = rayTrace(positionInViewCoord.xyz, reflectDir);
-        FragColor = vec4(reflectColor * Diffuse, 1.0);
+        FragColor = vec4(reflectColor, 1.0);
     }
     else {
         Diffuse = phong(Diffuse, FragPos, Normal, Specular);
