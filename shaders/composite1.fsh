@@ -169,9 +169,9 @@ float linearizeDepth(float depth) {
 
 vec3 rayTrace(vec3 start, vec3 dir) {
     vec3 point = start;
-    int iterations = 20;
+    int iterations = 28;
     for (int i = 0; i < iterations; i++) {
-        point += dir * 0.2;
+        point += dir * 0.1;
         vec4 screenPos = projection * vec4(point, 1.0);
         screenPos.xyz /= screenPos.w;
         screenPos.xyz = screenPos.xyz * 0.5 + 0.5;
@@ -221,7 +221,7 @@ void main()
 
     if (isWater == vec3(1.0)) {
         float wave = getWave(FragPos);
-        vec3 newNormal = vec3(0,1,0);
+        vec3 newNormal = vec3(0, 1, 0);
         newNormal.z += 0.05 * (((wave - 0.4) / 0.6) * 2 - 1);
         newNormal = normalize(newNormal);
         vec4 positionInViewCoord = view * vec4(FragPos, 1.0);
