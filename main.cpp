@@ -12,7 +12,7 @@
 //                   |_|   |_| \_\\___/ \___/|_____\____| |_|
 
 #include "Camera/Camera.h"
-#include "GBUFFER/gbuffer.h"
+#include "GBuffer/gbuffer.h"
 #include "GLFW/glfw3.h"
 #include "GLM.h"
 #include "Model/Model.h"
