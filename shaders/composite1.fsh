@@ -155,6 +155,10 @@ vec3 phong(vec3 Diffuse, vec3 FragPos, vec3 Normal, float Specular) {
     return result;
 }
 
+float random (vec2 uv) {
+    return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123); //simple random function
+}
+
 float linearizeDepth(float depth) {
     float z = depth * 2.0 - 1.0; // Back to NDC
     return (2.0 * near * far) / (far + near - z * (far - near));
@@ -172,12 +176,11 @@ vec3 rayTrace(vec3 start, vec3 dir) {
         if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1)
             break;
 //        float depth = gl_FragCoord.z;
-        uv = vec2(uv.x, -uv.y);
-        float depth = texture(gDepthTex,uv).z;
+        float depth = linearizeDepth(texture(gDepthTex,vec2(uv.x, -uv.y)).z);
         if (abs(depth) < abs(screenPos.z))
-            return texture(gDiffuseSpecular, uv).rgb;
+            return texture(gDiffuseSpecular, vec2(uv.x, -uv.y)).rgb;
     }
-    return texture(gDiffuseSpecular, TexCoords).rgb;
+    return vec3(0.0);
 }
 
 void main()
@@ -196,9 +199,9 @@ void main()
 
     if (isWater == vec3(1.0)) {
         vec4 positionInViewCoord = view * vec4(FragPos, 1.0);
-        vec3 reflectDir = reflect(-positionInViewCoord.xyz, Normal);
+        vec3 reflectDir = reflect(-positionInViewCoord.xyz, normalize(Normal));
         vec3 reflectColor = rayTrace(positionInViewCoord.xyz, reflectDir);
-        FragColor = vec4(reflectColor, 1.0);
+        FragColor = vec4(reflectColor * Diffuse, 1.0);
     }
     else {
         Diffuse = phong(Diffuse, FragPos, Normal, Specular);
