@@ -1041,9 +1041,11 @@ void renderComposite() {
     composite1Shader->setInt("noisetex", 6);
     composite1Shader->setFloat("near", near_plane);
     composite1Shader->setFloat("far", far_plane);
-    composite1Shader->setFloat("worldTime", glfwGetTime());
+    composite1Shader->setFloat("worldTime", static_cast<float>(glfwGetTime()));
     composite1Shader->set4Matrix("view", view);
+    composite1Shader->set4Matrix("viewInverse", glm::inverse(view));
     composite1Shader->set4Matrix("projection", projection);
+    composite1Shader->set4Matrix("projectionInverse", glm::inverse(projection));
     composite1Shader->set4Matrix("lightSpaceMatrix", lightSpaceMatrix);
     composite1Shader->set3Vector("lightPos", smallLight);
     composite1Shader->set3Vector("viewPos", camera.cameraPos);

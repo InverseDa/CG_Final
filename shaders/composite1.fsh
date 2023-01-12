@@ -27,7 +27,9 @@ uniform sampler2D shadowMap;
 uniform sampler2D noisetex;
 
 uniform mat4 projection;
+uniform mat4 projectionInverse;
 uniform mat4 view;
+uniform mat4 viewInverse;
 uniform mat4 lightSpaceMatrix;
 
 uniform float near;
@@ -182,10 +184,10 @@ vec3 rayTrace(vec3 start, vec3 dir) {
             break;
 //        float depth = gl_FragCoord.z;
         float depth = linearizeDepth(texture(gDepthTex,vec2(uv.x, uv.y)).z);
-        if (abs(depth) < abs(screenPos.z))
+        if (abs(depth) < linearizeDepth(abs(screenPos.z)))
             return texture(gDiffuseSpecular, vec2(uv.x, uv.y)).rgb;
     }
-    return texture(gDiffuseSpecular, TexCoords).rgb;
+    return vec3(0.0);
 }
 
 float getWave(vec3 pos) {
@@ -196,7 +198,6 @@ float getWave(vec3 pos) {
     coord1.z += speed1 * 0.2;
     float noise1 = texture(noisetex, coord1.xz).x;
 
-    // 混合波浪
     float speed2 = worldTime * 85 / (noiseTextureResolution * 7);
     vec3 coord2 = pos.xyz / noiseTextureResolution;
     coord2.x *= 0.5;
@@ -222,14 +223,23 @@ void main()
     //    FragColor.rgb = (Diffuse * (1.0 - cloud.a) + cloud.rgb);
 
     if (is == water) {
+        // water normal
         float wave = getWave(FragPos);
-        vec3 newNormal = vec3(0, 1, 0);
-        newNormal.z += 0.05 * (((wave - 0.4) / 0.6) * 2 - 1);
+        vec3 newNormal = (view * vec4(Normal, 1.0)).xyz;
+//        newNormal.z += 0.05 * (((wave - 0.4) / 0.6) * 2 - 1);
+//        newNormal = vec3(view * vec4(newNormal, 1.0));
         newNormal = normalize(newNormal);
+
+        // ssr
         vec4 positionInViewCoord = view * vec4(FragPos, 1.0);
         vec3 reflectDir = reflect(-positionInViewCoord.xyz, newNormal);
         vec3 reflectColor = rayTrace(positionInViewCoord.xyz, reflectDir);
-        FragColor = vec4(reflectColor, 1.0);
+        vec3 finalColor = Diffuse;
+        if(length(reflectColor)>0) {
+            float fadeFactor = 1 - clamp(pow(abs(TexCoords.x-0.5)*2, 2), 0, 1);
+            finalColor = mix(finalColor, reflectColor, fadeFactor);
+        }
+        FragColor = vec4(finalColor, 1.0);
     }
     else {
         Diffuse = phong(Diffuse, FragPos, Normal, Specular);
