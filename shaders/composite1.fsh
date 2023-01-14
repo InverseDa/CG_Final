@@ -14,9 +14,9 @@ const vec3 lightDark = vec3(0.7, 0.75, 0.8);   // 光照颜色 -- 暗部
 
 const int noiseTextureResolution = 128;
 
-out vec4 FragColor;
-
 in vec2 TexCoords;
+
+out vec4 FragColor;
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
@@ -190,12 +190,25 @@ float getWave(vec3 pos) {
 }
 
 // Raymarch algorithm, return uv coordinates(vec2)
-//vec2 rayMarch(vec3 hitCoord, vec3 viewDir) {
-//    int steps = 28;
-//    for(int i = 0; i < steps; i++) {
-//
-//    }
-//}
+vec2 rayMarch(vec3 reflPosition, vec3 reflDir) {
+    int steps = 30;
+    vec3 reflPos = reflPosition;
+    for(int i = 0; i < steps; i++) {
+        reflPos += reflDir * 0.2;
+        vec4 UV = projection * vec4(reflPos, 1.0);
+        UV.xyz /= UV.w;
+        UV.xyz = UV.xyz * 0.5 + 0.5;
+        if (UV.x < 0 || UV.x > 1 ||
+            UV.y < 0 || UV.y > 1 )
+            break;
+        float worldDepth = linearizeDepth(texture(gDepthTex, UV.st).r);
+        float curDepth = linearizeDepth(UV.z);
+        if(abs(worldDepth) - abs(curDepth) <= 0) {
+            return UV.st;
+        }
+    }
+    return vec2(0.0);
+}
 
 void main()
 {
@@ -213,9 +226,15 @@ void main()
     Normal = normalize(2.0 * Normal - 1.0);
 
     if (is == water) {
-        FragColor = vec4(Diffuse, 1.0);
-    }
-    else {
+        vec4 positionInView = view * vec4(FragPos, 1.0);
+        vec3 vDir = normalize(positionInView.xyz);
+        vec3 norm = mat3(view) * Normal;
+        vec3 reflectDir = normalize(reflect(-vDir, norm));
+        vec2 uv = rayMarch(positionInView.xyz, reflectDir);
+        vec3 finalColor = texture(gDiffuseSpecular, uv).rgb;
+//        finalColor = mix(Diffuse, finalColor, 0.5);
+        FragColor = vec4(finalColor, 1.0);
+    } else {
         Diffuse = phong(Diffuse, FragPos, Normal, Specular);
         FragColor = vec4(Diffuse, 1.0);
     }
