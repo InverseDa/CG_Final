@@ -21,6 +21,6 @@ void main() {
     gl_Position = v3;
 
     position = vec3(v2.xyz);
-    normal = vec3( model * vec4(vNormal, 0.0) );
+    normal = vec3( mat3(transpose(inverse(mat3(model)))) * vNormal );
     color = vColor;
 }
