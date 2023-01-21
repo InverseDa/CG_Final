@@ -45,5 +45,5 @@ void main() {
     gNormal = normalize(mat3(transpose(inverse(mat3(model)))) * norm);
     gDiffuseSpecular.rgb = texture(tex, fs_in.TexCoords).rgb;
     gDiffuseSpecular.a = texture(specular, fs_in.TexCoords).r;
-    gFeatureTex = vec4(0.9);
+//    gFeatureTex = vec4(0.9);
 }

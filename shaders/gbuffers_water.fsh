@@ -93,7 +93,7 @@ float getDepth(vec4 positionInCameraView) {
 
 void main() {
 //    vec3 tex = vec3(texture(waterTexture, fs_in.TexCoords));
-    vec3 tex = vec3(0.0, 0.8, 1.0);
+    vec3 tex = vec3(0.0, 0.5, 1.0);
     float wave = getWave(fs_in.FragPos);
     vec3 color = tex * wave;
     vec4 skyColor = reflectSky(wave);
@@ -101,8 +101,8 @@ void main() {
 //    vec3 final = vec3(mix(skyColor.rgb, terrainColor.rgb, 0.5));
     vec3 final = skyColor.rgb;
 //    final += getBloom(final) * 0.8;
-    gDiffuseSpecular = vec4(final, 0.7);
+    gDiffuseSpecular = vec4(vec3(0.0), 1.0);
     gNormal = vec3(0.0, 1.0, 1.0);
     gPosition = fs_in.FragPos;
-    gFeatureTex = vec4(1.0);
+    gFeatureTex = vec4(final, 0.7);
 }

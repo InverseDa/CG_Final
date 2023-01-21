@@ -1,8 +1,5 @@
 #version 330 core
 
-const vec4 water = vec4(1.0);
-const vec4 terrain = vec4(0.9);
-
 const int bottom = 250;
 const int top = 300;
 const int width = 1000;
@@ -16,7 +13,10 @@ const int noiseTextureResolution = 128;
 
 in vec2 TexCoords;
 
-out vec4 FragColor;
+layout (location = 0) out vec3 comPosition;
+layout (location = 1) out vec3 comNormal;
+layout (location = 2) out vec4 comDiffuseSpecular;
+layout (location = 3) out vec4 comFeatureTex;
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
@@ -194,7 +194,7 @@ vec2 rayMarch(vec3 reflPosition, vec3 reflDir) {
     int steps = 30;
     vec3 reflPos = reflPosition;
     for(int i = 0; i < steps; i++) {
-        reflPos += reflDir * 0.2;
+        reflPos += reflDir * 5;
         vec4 UV = projection * vec4(reflPos, 1.0);
         UV.xyz /= UV.w;
         UV.xyz = UV.xyz * 0.5 + 0.5;
@@ -218,24 +218,26 @@ void main()
     // DiffuseColor
     vec3 Diffuse = texture(gDiffuseSpecular, TexCoords).rgb;
     // feature map
-    vec4 is = texture(gFeatureTex, TexCoords);
+    vec4 water = texture(gFeatureTex, TexCoords);
     // specular
     float Specular = texture(gDiffuseSpecular, TexCoords).a;
     // world normal map
-    vec3 Normal = texture(gNormal, TexCoords).rgb;
-    Normal = normalize(2.0 * Normal - 1.0);
+    vec3 Normal = texture(gNormal, TexCoords).rgb;          //[0,1]
+    Normal = normalize(2.0 * Normal - 1.0);                 //[-1,1]
 
-    if (is == water) {
-        vec4 positionInView = view * vec4(FragPos, 1.0);
-        vec3 vDir = normalize(positionInView.xyz);
-        vec3 norm = mat3(view) * Normal;
-        vec3 reflectDir = normalize(reflect(-vDir, norm));
-        vec2 uv = rayMarch(positionInView.xyz, reflectDir);
-        vec3 finalColor = texture(gDiffuseSpecular, uv).rgb;
-//        finalColor = mix(Diffuse, finalColor, 0.5);
-        FragColor = vec4(finalColor, 1.0);
-    } else {
+//    if (is == water) {
+//        vec4 positionInView = view * vec4(FragPos, 1.0);
+//        vec3 vDir = normalize(positionInView.xyz);
+//        vec3 norm = mat3(view) * Normal;
+//        vec3 reflectDir = normalize(reflect(-vDir, norm));
+//        vec2 uv = rayMarch(positionInView.xyz, reflectDir);
+//        vec3 finalColor = texture(gDiffuseSpecular, uv).rgb;
+////        finalColor = mix(Diffuse, finalColor, 0.5);
+//        FragColor = vec4(finalColor, 1.0);
+//    } else {
         Diffuse = phong(Diffuse, FragPos, Normal, Specular);
-        FragColor = vec4(Diffuse, 1.0);
-    }
+        vec4 final = vec4(Diffuse, 1.0f);
+//        final.rgb += water.rgb;
+        comDiffuseSpecular = vec4(final);
+//    }
 }

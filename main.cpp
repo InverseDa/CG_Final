@@ -12,7 +12,7 @@
 //                   |_|   |_| \_\\___/ \___/|_____\____| |_|
 
 #include "Camera/Camera.h"
-#include "GBuffer/gbuffer.h"
+#include "FrameBuffer/FrameBuffer.h"
 #include "GLFW/glfw3.h"
 #include "GLM.h"
 #include "Model/Model.h"
@@ -104,7 +104,7 @@ unsigned int skyBoxTextureID, noisetex, terrainTextureID, terrainSpecular,
 /////////////////////////////////////////////Model/////////////////////////////////////////////
 Model tree, sun, nanosuit;
 
-gBuffer *gbuffer;
+FrameBuffer *gbuffer, *composite1Buffer;
 
 /**
  * @brief screen
@@ -454,6 +454,8 @@ void initShaders() {
                                        "shaders/gbuffers_water_reflection.fsh");
     robotShader =
             new Shader("shaders/gbuffers_robot.vsh", "shaders/gbuffers_robot.fsh");
+    composite2Shader =
+            new Shader("shaders/composite2.vsh", "shaders/composite2.fsh");
 }
 
 void initModel() {
@@ -491,48 +493,15 @@ void initDepthMap() {
 }
 
 void initGbuffer() {
-    gbuffer = new gBuffer;
+    gbuffer = new FrameBuffer;
+    composite1Buffer = new FrameBuffer;
 #ifdef __APPLE__
     gbuffer->init(WINDOW_WIDTH * 2, WINDOW_HEIGHT * 2);
+    composite1Buffer->init(WINDOW_WIDTH * 2, WINDOW_HEIGHT * 2);
 #else
     gbuffer->init(WINDOW_WIDTH, WINDOW_HEIGHT);
+    compositeBuffer->init(WINDOW_WIDTH, WINDOW_HEIGHT);
 #endif
-}
-
-void initMirrorBuffer() {
-    glGenFramebuffers(1, &mirrorFBO);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, mirrorFBO);
-
-    glGenTextures(1, &mirrorTex);
-    glBindTexture(GL_TEXTURE_2D, mirrorTex);
-    glTexImage2D(GL_TEXTURE_2D,
-                 0,
-                 GL_RGBA,
-                 WINDOW_WIDTH,
-                 WINDOW_HEIGHT,
-                 0,
-                 GL_RGBA,
-                 GL_UNSIGNED_BYTE,
-                 nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(
-            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mirrorTex, 0);
-    mirrorDBO[0] = GL_COLOR_ATTACHMENT0;
-    glDrawBuffers(1, mirrorDBO);
-    // create render buffer
-    glGenRenderbuffers(1, &mirrorRBO);
-    glBindRenderbuffer(GL_RENDERBUFFER, mirrorRBO);
-    glRenderbufferStorage(
-            GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WINDOW_WIDTH, WINDOW_HEIGHT);
-    glFramebufferRenderbuffer(
-            GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, mirrorRBO);
-    // check
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "FrameBuffer ERROR: status: " << status << std::endl;
-    }
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
 void initScreen() {
@@ -754,7 +723,7 @@ void displaySkyBox(int is) {
 }
 
 void displayWater(int is) {
-    glEnable(GL_BLEND);
+//    glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glm::mat4 model = glm::translate(glm::mat4(1.0f),
                                      glm::vec3(-1024.0, 0.00000001f, -1024.0f));
@@ -790,7 +759,7 @@ void displayWater(int is) {
                        GL_UNSIGNED_INT,
                        nullptr);
     }
-    glDisable(GL_BLEND);
+//    glDisable(GL_BLEND);
 }
 
 void displayTree(int is) {
@@ -998,7 +967,7 @@ void debugging() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, shadowMap);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->gDepthTex);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->DepthTex);
 
     screen::Draw(*debugShadowShader);
 }
@@ -1016,18 +985,20 @@ void renderGBuffer() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void renderComposite() {
+void renderComposite1() {
+    glBindFramebuffer(GL_FRAMEBUFFER, composite1Buffer->fbo);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     composite1Shader->use();
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->gPosition);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->Position);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->gNormal);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->Normal);
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->gDiffuseSpecular);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->DiffuseSpecular);
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->gDepthTex);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->DepthTex);
     glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->gFeatureTex);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->WaterTex);
     glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, shadowMap);
     glActiveTexture(GL_TEXTURE6);
@@ -1052,6 +1023,40 @@ void renderComposite() {
     composite1Shader->set3Vector("lightColor", lightColor);
     composite1Shader->set3Vector("lightDirection", glm::vec3(0) - smallLight);
     screen::Draw(*composite1Shader);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void renderComposite2() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    composite2Shader->use();
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, composite1Buffer->DiffuseSpecular);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->DepthTex);
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->WaterTex);
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, shadowMap);
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, noisetex);
+    composite2Shader->setInt("gDiffuseSpecular", 2);
+    composite2Shader->setInt("gDepthTex", 3);
+    composite2Shader->setInt("waterTex", 4);
+    composite2Shader->setInt("shadowMap", 5);
+    composite2Shader->setInt("noisetex", 6);
+    composite2Shader->setFloat("near", near_plane);
+    composite2Shader->setFloat("far", far_plane);
+    composite2Shader->setFloat("worldTime", static_cast<float>(glfwGetTime()));
+    composite2Shader->set4Matrix("view", view);
+    composite2Shader->set4Matrix("viewInverse", glm::inverse(view));
+    composite2Shader->set4Matrix("projection", projection);
+    composite2Shader->set4Matrix("projectionInverse", glm::inverse(projection));
+    composite2Shader->set4Matrix("lightSpaceMatrix", lightSpaceMatrix);
+    composite2Shader->set3Vector("lightPos", smallLight);
+    composite2Shader->set3Vector("viewPos", camera.cameraPos);
+    composite2Shader->set3Vector("lightColor", lightColor);
+    composite2Shader->set3Vector("lightDirection", glm::vec3(0) - smallLight);
+    screen::Draw(*composite2Shader);
 }
 
 void freeMemory() {
@@ -1080,6 +1085,7 @@ void freeMemory() {
     delete robotShader;
 
     delete gbuffer;
+    delete composite1Buffer;
 }
 
 /////////////////////////////////////////////main/////////////////////////////////////////////
@@ -1121,7 +1127,8 @@ int main() {
         glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 #endif
         renderGBuffer();
-        renderComposite();
+        renderComposite1();
+        renderComposite2();
         /////////////////////////debugger/////////////////////////
         glDisable(GL_DEPTH_TEST);
 #ifdef __APPLE__
