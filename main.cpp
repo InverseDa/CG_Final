@@ -500,7 +500,7 @@ void initGbuffer() {
     composite1Buffer->init(WINDOW_WIDTH * 2, WINDOW_HEIGHT * 2);
 #else
     gbuffer->init(WINDOW_WIDTH, WINDOW_HEIGHT);
-    compositeBuffer->init(WINDOW_WIDTH, WINDOW_HEIGHT);
+    composite1Buffer->init(WINDOW_WIDTH, WINDOW_HEIGHT);
 #endif
 }
 
