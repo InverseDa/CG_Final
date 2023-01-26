@@ -36,10 +36,15 @@
 #define Brown   glm::vec3(0.5, 0.5, 0.5)
 
 const int WATER_VERTICES_HEIGHT_AND_WIDTH = 410;
-const unsigned int WINDOW_WIDTH = 1366, WINDOW_HEIGHT = 768;
-const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-const float near_plane = 0.1f, far_plane = 100000.0f;
-const int RENDER_SHADOW = 0, RENDER_GBUFFER = 1, RENDER_WATER_VP = 2;
+const unsigned int WINDOW_WIDTH = 1366;
+const unsigned int WINDOW_HEIGHT = 768;
+const unsigned int SHADOW_WIDTH = 1024;
+const unsigned int SHADOW_HEIGHT = 1024;
+const float near_plane = 0.1f;
+const float far_plane = 100000.0f;
+const int RENDER_SHADOW = 0;
+const int RENDER_GBUFFER = 1;
+const int RENDER_WATER_VP = 2;
 
 /////////////////////////////////////////////Camera/////////////////////////////////////////////
 //  FPS风格摄像机
@@ -83,28 +88,61 @@ std::vector<unsigned int> terrainIndices;
 std::vector<float> waterVertices;
 std::vector<unsigned int> waterIndices;
 //  heightmap arguments
-int width, height, nChannels;
+int width;
+int height;
+int nChannels;
 // dynamicCubeMap
-unsigned int dynamicCubeMapTexture, dynamicCubeMapFrameBuffers[6],
-        dynamicCubeMapTexSize;
+unsigned int dynamicCubeMapTexture;
+unsigned int dynamicCubeMapFrameBuffers[6];
+unsigned int dynamicCubeMapTexSize;
 /////////////////////////////////////////////VAO、VBO、EBO/////////////////////////////////////////////
 //  VAO VBO EBO
-unsigned int terrainVAO, terrainVerticesVBO, terrainTextureVBO,
-        terrainTexCoordVBO, terrainEBO, skyBoxVAO, skyBoxVBO, waterVAO,
-        waterVerticesVBO, waterNormalVBO, waterVerticesEBO, quadVAO, quadVBO;
+unsigned int terrainVAO;
+unsigned int terrainVerticesVBO;
+unsigned int terrainTextureVBO;
+unsigned int terrainTexCoordVBO;
+unsigned int terrainEBO;
+unsigned int skyBoxVAO;
+unsigned int skyBoxVBO;
+unsigned int waterVAO;
+unsigned int waterVerticesVBO;
+unsigned int waterNormalVBO;
+unsigned int waterVerticesEBO;
+unsigned int quadVAO;
+unsigned int quadVBO;
 // SHADOW
-GLuint shadowMapFBO, shadowMap, mirrorFBO, mirrorTex, mirrorDBO[1], mirrorRBO;
+GLuint shadowMapFBO;
+GLuint shadowMap;
+GLuint mirrorFBO;
+GLuint mirrorTex;
+GLuint mirrorDBO[1];
+GLuint mirrorRBO;
 /////////////////////////////////////////////Shaders/////////////////////////////////////////////
-Shader *terrainShader, *skyBoxShader, *waterShader, *modelShader, *shadowShader,
-        *debugShadowShader, *sunShader, *composite1Shader, *composite2Shader,
-        *waterReflectionShader, *robotShader;
+Shader *terrainShader;
+Shader *skyBoxShader;
+Shader *waterShader;
+Shader *modelShader;
+Shader *shadowShader;
+Shader *debugShadowShader;
+Shader *sunShader;
+Shader *composite1Shader;
+Shader *composite2Shader;
+Shader *waterReflectionShader;
+Shader *robotShader;
 /////////////////////////////////////////////TextureID/////////////////////////////////////////////
-unsigned int skyBoxTextureID, noisetex, terrainTextureID, terrainSpecular,
-        terrainNormal, waterTextureID;
+unsigned int skyBoxTextureID;
+unsigned int noisetex;
+unsigned int terrainTextureID;
+unsigned int terrainSpecular;
+unsigned int terrainNormal;
+unsigned int waterTextureID;
 /////////////////////////////////////////////Model/////////////////////////////////////////////
-Model tree, sun, nanosuit;
+Model tree;
+Model sun;
+Model nanosuit;
 
-FrameBuffer *gbuffer, *composite1Buffer;
+FrameBuffer *gbuffer;
+FrameBuffer *composite1Buffer;
 
 /**
  * @brief screen
