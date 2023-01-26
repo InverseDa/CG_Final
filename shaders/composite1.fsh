@@ -16,13 +16,15 @@ in vec2 TexCoords;
 layout (location = 0) out vec3 comPosition;
 layout (location = 1) out vec3 comNormal;
 layout (location = 2) out vec4 comDiffuseSpecular;
-layout (location = 3) out vec4 comFeatureTex;
+layout (location = 3) out vec4 comWaterTex;
+
+out vec4 fcolor;
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gDiffuseSpecular;
 uniform sampler2D gDepthTex;
-uniform sampler2D gFeatureTex;
+uniform sampler2D gWaterTex;
 uniform sampler2D shadowMap;
 uniform sampler2D noisetex;
 
@@ -162,7 +164,7 @@ vec3 phong(vec3 Diffuse, vec3 FragPos, vec3 Normal, float Specular) {
     return result;
 }
 
-float random (vec2 uv) {
+float random(vec2 uv) {
     return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123); //simple random function
 }
 
@@ -193,17 +195,17 @@ float getWave(vec3 pos) {
 vec2 rayMarch(vec3 reflPosition, vec3 reflDir) {
     int steps = 30;
     vec3 reflPos = reflPosition;
-    for(int i = 0; i < steps; i++) {
+    for (int i = 0; i < steps; i++) {
         reflPos += reflDir * 5;
         vec4 UV = projection * vec4(reflPos, 1.0);
         UV.xyz /= UV.w;
         UV.xyz = UV.xyz * 0.5 + 0.5;
         if (UV.x < 0 || UV.x > 1 ||
-            UV.y < 0 || UV.y > 1 )
-            break;
+        UV.y < 0 || UV.y > 1)
+        break;
         float worldDepth = linearizeDepth(texture(gDepthTex, UV.st).r);
         float curDepth = linearizeDepth(UV.z);
-        if(abs(worldDepth) - abs(curDepth) <= 0) {
+        if (abs(worldDepth) - abs(curDepth) <= 0) {
             return UV.st;
         }
     }
@@ -218,26 +220,16 @@ void main()
     // DiffuseColor
     vec3 Diffuse = texture(gDiffuseSpecular, TexCoords).rgb;
     // feature map
-    vec4 water = texture(gFeatureTex, TexCoords);
+    vec4 water = texture(gWaterTex, TexCoords);
     // specular
     float Specular = texture(gDiffuseSpecular, TexCoords).a;
     // world normal map
     vec3 Normal = texture(gNormal, TexCoords).rgb;          //[0,1]
     Normal = normalize(2.0 * Normal - 1.0);                 //[-1,1]
 
-//    if (is == water) {
-//        vec4 positionInView = view * vec4(FragPos, 1.0);
-//        vec3 vDir = normalize(positionInView.xyz);
-//        vec3 norm = mat3(view) * Normal;
-//        vec3 reflectDir = normalize(reflect(-vDir, norm));
-//        vec2 uv = rayMarch(positionInView.xyz, reflectDir);
-//        vec3 finalColor = texture(gDiffuseSpecular, uv).rgb;
-////        finalColor = mix(Diffuse, finalColor, 0.5);
-//        FragColor = vec4(finalColor, 1.0);
-//    } else {
-        Diffuse = phong(Diffuse, FragPos, Normal, Specular);
-        vec4 final = vec4(Diffuse, 1.0f);
-//        final.rgb += water.rgb;
-        comDiffuseSpecular = vec4(final);
-//    }
+    Diffuse = phong(Diffuse, FragPos, Normal, Specular);
+    comDiffuseSpecular = vec4(Diffuse, 1.0f);
+    comNormal = texture(gNormal, TexCoords).rgb;
+    comPosition = FragPos;
+    comWaterTex = water;
 }

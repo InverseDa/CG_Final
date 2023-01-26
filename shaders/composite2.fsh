@@ -5,12 +5,11 @@ in vec2 TexCoords;
 
 out vec4 FragColor;
 
-uniform sampler2D gPosition;
-uniform sampler2D gNormal;
-uniform sampler2D gDiffuseSpecular;
-uniform sampler2D gDepthTex;
-uniform sampler2D waterTex;
-uniform sampler2D shadowMap;
+uniform sampler2D Position;
+uniform sampler2D Normal;
+uniform sampler2D DiffuseSpecular;
+uniform sampler2D DepthTex;
+uniform sampler2D WaterTex;
 uniform sampler2D noisetex;
 
 uniform mat4 projection;
@@ -57,17 +56,17 @@ float getWave(vec3 pos) {
 
 // Raymarch algorithm, return uv coordinates(vec2)
 vec2 rayMarch(vec3 reflPosition, vec3 reflDir) {
-    int steps = 30;
+    int steps = 20;
     vec3 reflPos = reflPosition;
     for (int i = 0; i < steps; i++) {
-        reflPos += reflDir * 0.2;
+        reflPos += reflDir * 5;
         vec4 UV = projection * vec4(reflPos, 1.0);
         UV.xyz /= UV.w;
         UV.xyz = UV.xyz * 0.5 + 0.5;
-        if (UV.x < 0 || UV.x > 1 ||
-        UV.y < 0 || UV.y > 1)
-        break;
-        float worldDepth = linearizeDepth(texture(gDepthTex, UV.st).r);
+        if (UV.x < 0 || UV.x > 1 || UV.y < 0 || UV.y > 1){
+            break;
+        }
+        float worldDepth = linearizeDepth(texture(DepthTex, UV.st).r);
         float curDepth = linearizeDepth(UV.z);
         if (abs(worldDepth) - abs(curDepth) <= 0) {
             return UV.st;
@@ -78,27 +77,34 @@ vec2 rayMarch(vec3 reflPosition, vec3 reflDir) {
 
 void main()
 {
+    vec3 FragPos = texture(Position, TexCoords).rgb;
     // DiffuseColor
-    vec3 Diffuse = texture(gDiffuseSpecular, TexCoords).rgb;
+    vec3 Diffuse = texture(DiffuseSpecular, TexCoords).rgb;
     // feature map
-    vec4 water = texture(waterTex, TexCoords);
+    vec4 water = texture(WaterTex, TexCoords);
     // specular
-    float Specular = texture(gDiffuseSpecular, TexCoords).a;
+    float Specular = texture(DiffuseSpecular, TexCoords).a;
     // world normal map
-    vec3 Normal = vec3(0, 1, 0);
+    vec3 normal = texture(Normal, TexCoords).rgb;          //[0,1]
+    normal = normalize(2.0 * normal - 1.0);                 //[-1,1]
     // depth
-    float depth = texture(gDepthTex, TexCoords).r;
-    vec3 FragPos = vec3(TexCoords.st * 2.0 - 1.0, depth * 2.0 - 1.0);
+    float depth = texture(DepthTex, TexCoords).r;
     vec3 waterColor = vec3(0.0);
     if (Diffuse == vec3(0.0)) {
         vec4 positionInView = view * vec4(FragPos, 1.0);
         vec3 vDir = normalize(positionInView.xyz);
-        vec3 norm = mat3(view) * Normal;
+        vec3 norm = mat3(view) * normal;
+//        vec3 norm = vec3(view * vec4(normal, 1.0));
         vec3 reflectDir = normalize(reflect(vDir, norm));
         vec2 uv = rayMarch(positionInView.xyz, reflectDir);
-        if(uv != vec2(0.0))
-        waterColor = texture(gDiffuseSpecular, uv).rgb;
-        //finalColor = mix(Diffuse, finalColor, 0.5);
+        if(uv != vec2(0.0)) {
+            waterColor = texture(DiffuseSpecular, uv).rgb;
+            waterColor = getWave(FragPos) * waterColor;
+            FragColor = vec4(mix(water.rgb, waterColor.rgb, 0.5), 1.0);
+        } else {
+            FragColor = vec4(water.rgb, 1.0);
+        }
+        return;
     }
-    FragColor = vec4(Diffuse + water.rgb, 1.0);
+    FragColor = vec4(Diffuse, 1.0);
 }

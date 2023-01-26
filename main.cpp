@@ -1045,7 +1045,7 @@ void renderComposite1() {
     composite1Shader->setInt("gNormal", 1);
     composite1Shader->setInt("gDiffuseSpecular", 2);
     composite1Shader->setInt("gDepthTex", 3);
-    composite1Shader->setInt("gFeatureTex", 4);
+    composite1Shader->setInt("gWaterTex", 4);
     composite1Shader->setInt("shadowMap", 5);
     composite1Shader->setInt("noisetex", 6);
     composite1Shader->setFloat("near", near_plane);
@@ -1056,10 +1056,10 @@ void renderComposite1() {
     composite1Shader->set4Matrix("projection", projection);
     composite1Shader->set4Matrix("projectionInverse", glm::inverse(projection));
     composite1Shader->set4Matrix("lightSpaceMatrix", lightSpaceMatrix);
-    composite1Shader->set3Vector("lightPos", smallLight);
+    composite1Shader->set3Vector("lightPos", lightPos);
     composite1Shader->set3Vector("viewPos", camera.cameraPos);
     composite1Shader->set3Vector("lightColor", lightColor);
-    composite1Shader->set3Vector("lightDirection", glm::vec3(0) - smallLight);
+    composite1Shader->set3Vector("lightDirection", glm::vec3(0) - lightPos);
     screen::Draw(*composite1Shader);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -1067,20 +1067,23 @@ void renderComposite1() {
 void renderComposite2() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     composite2Shader->use();
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, composite1Buffer->Position);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, composite1Buffer->DiffuseSpecular);
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, gbuffer->DepthTex);
     glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->WaterTex);
+    glBindTexture(GL_TEXTURE_2D, composite1Buffer->WaterTex);
     glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, shadowMap);
+    glBindTexture(GL_TEXTURE_2D, composite1Buffer->Normal);
     glActiveTexture(GL_TEXTURE6);
     glBindTexture(GL_TEXTURE_2D, noisetex);
-    composite2Shader->setInt("gDiffuseSpecular", 2);
-    composite2Shader->setInt("gDepthTex", 3);
-    composite2Shader->setInt("waterTex", 4);
-    composite2Shader->setInt("shadowMap", 5);
+    composite2Shader->setInt("Position", 1);
+    composite2Shader->setInt("DiffuseSpecular", 2);
+    composite2Shader->setInt("DepthTex", 3);
+    composite2Shader->setInt("WaterTex", 4);
+    composite2Shader->setInt("Normal", 5);
     composite2Shader->setInt("noisetex", 6);
     composite2Shader->setFloat("near", near_plane);
     composite2Shader->setFloat("far", far_plane);
@@ -1090,10 +1093,10 @@ void renderComposite2() {
     composite2Shader->set4Matrix("projection", projection);
     composite2Shader->set4Matrix("projectionInverse", glm::inverse(projection));
     composite2Shader->set4Matrix("lightSpaceMatrix", lightSpaceMatrix);
-    composite2Shader->set3Vector("lightPos", smallLight);
+    composite2Shader->set3Vector("lightPos", lightPos);
     composite2Shader->set3Vector("viewPos", camera.cameraPos);
     composite2Shader->set3Vector("lightColor", lightColor);
-    composite2Shader->set3Vector("lightDirection", glm::vec3(0) - smallLight);
+    composite2Shader->set3Vector("lightDirection", glm::vec3(0) - lightPos);
     screen::Draw(*composite2Shader);
 }
 
