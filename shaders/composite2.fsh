@@ -12,11 +12,12 @@ uniform sampler2D DepthTex;
 uniform sampler2D WaterTex;
 uniform sampler2D noisetex;
 
-uniform mat4 projection;
-uniform mat4 projectionInverse;
-uniform mat4 view;
-uniform mat4 viewInverse;
-uniform mat4 lightSpaceMatrix;
+uniform mat4 projection;            // p
+uniform mat4 inverseP;              // p^{-1}
+uniform mat4 view;                  // v
+uniform mat4 inverseV;              // v^{-1}
+uniform mat4 inverseVP;             // (p*v)^{-1}=v^{-1}*p^{-1}
+uniform mat4 lightSpaceMatrix;      // lp*lv
 
 uniform float near;
 uniform float far;
@@ -59,16 +60,16 @@ vec2 rayMarch(vec3 reflPosition, vec3 reflDir) {
     int steps = 20;
     vec3 reflPos = reflPosition;
     for (int i = 0; i < steps; i++) {
-        reflPos += reflDir * 5;
+        reflPos += reflDir * 1.75;
         vec4 UV = projection * vec4(reflPos, 1.0);
         UV.xyz /= UV.w;
         UV.xyz = UV.xyz * 0.5 + 0.5;
-        if (UV.x < 0 || UV.x > 1 || UV.y < 0 || UV.y > 1){
+        if (UV.x < 0 || UV.x > 1 || UV.y < 0 || UV.y > 1) {
             break;
         }
         float worldDepth = linearizeDepth(texture(DepthTex, UV.st).r);
         float curDepth = linearizeDepth(UV.z);
-        if (abs(worldDepth) - abs(curDepth) <= 0) {
+        if (abs(worldDepth) - abs(curDepth) < 0 || i == steps - 1) {
             return UV.st;
         }
     }
@@ -92,15 +93,16 @@ void main()
     vec3 waterColor = vec3(0.0);
     if (Diffuse == vec3(0.0)) {
         vec4 positionInView = view * vec4(FragPos, 1.0);
-        vec3 vDir = normalize(positionInView.xyz);
+//        vec3 vDir = normalize(-positionInView.xyz);
+        vec3 vDir = viewPos - FragPos;
+        vDir = normalize(view * vec4(vDir, 1.0f)).xyz;
         vec3 norm = mat3(view) * normal;
-//        vec3 norm = vec3(view * vec4(normal, 1.0));
         vec3 reflectDir = normalize(reflect(vDir, norm));
         vec2 uv = rayMarch(positionInView.xyz, reflectDir);
-        if(uv != vec2(0.0)) {
-            waterColor = texture(DiffuseSpecular, uv).rgb;
-            waterColor = getWave(FragPos) * waterColor;
-            FragColor = vec4(mix(water.rgb, waterColor.rgb, 0.5), 1.0);
+        waterColor = textureLod(DiffuseSpecular, uv, 1).rgb;
+        if (waterColor != vec3(0.0)) {
+//            FragColor = vec4(mix(water.rgb, waterColor.rgb, 0.5), 1.0);
+            FragColor = 0.5 * vec4(waterColor.rgb, 1.0);
         } else {
             FragColor = vec4(water.rgb, 1.0);
         }

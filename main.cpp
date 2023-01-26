@@ -1089,9 +1089,10 @@ void renderComposite2() {
     composite2Shader->setFloat("far", far_plane);
     composite2Shader->setFloat("worldTime", static_cast<float>(glfwGetTime()));
     composite2Shader->set4Matrix("view", view);
-    composite2Shader->set4Matrix("viewInverse", glm::inverse(view));
+    composite2Shader->set4Matrix("inverseV", glm::inverse(view));
     composite2Shader->set4Matrix("projection", projection);
-    composite2Shader->set4Matrix("projectionInverse", glm::inverse(projection));
+    composite2Shader->set4Matrix("inverseP", glm::inverse(projection));
+    composite2Shader->set4Matrix("inverseVP", glm::inverse(projection * view));
     composite2Shader->set4Matrix("lightSpaceMatrix", lightSpaceMatrix);
     composite2Shader->set3Vector("lightPos", lightPos);
     composite2Shader->set3Vector("viewPos", camera.cameraPos);
