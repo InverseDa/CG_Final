@@ -40,9 +40,8 @@ uniform vec3 lightDirection;
 uniform mat4 model;
 
 void main() {
-    vec3 norm = texture(normal, fs_in.TexCoords).rgb;
     gPosition = fs_in.FragPos;
-    gNormal = normalize(mat3(transpose(inverse(mat3(model)))) * norm);
+    gNormal = fs_in.Normal;
     gDiffuseSpecular.rgb = texture(tex, fs_in.TexCoords).rgb;
     gDiffuseSpecular.a = texture(specular, fs_in.TexCoords).r;
 //    gFeatureTex = vec4(0.9);

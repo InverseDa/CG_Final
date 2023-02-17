@@ -60,7 +60,7 @@ vec2 rayMarch(vec3 reflPosition, vec3 reflDir) {
     int steps = 20;
     vec3 reflPos = reflPosition;
     for (int i = 0; i < steps; i++) {
-        reflPos += reflDir * 1.75;
+        reflPos += reflDir * 1.0;
         vec4 UV = projection * vec4(reflPos, 1.0);
         UV.xyz /= UV.w;
         UV.xyz = UV.xyz * 0.5 + 0.5;
@@ -76,9 +76,27 @@ vec2 rayMarch(vec3 reflPosition, vec3 reflDir) {
     return vec2(0.0);
 }
 
+vec3 worldPosFromDepth(float depth) {
+    float z = depth * 2.0 - 1.0;
+
+    vec4 clipSpacePosition = vec4(TexCoords * 2.0 - 1.0, z, 1.0);
+    vec4 viewSpacePosition = inverseP * clipSpacePosition;
+
+    // Perspective division
+    viewSpacePosition /= viewSpacePosition.w;
+
+    vec4 worldSpacePosition = inverseV * viewSpacePosition;
+
+    return worldSpacePosition.xyz;
+}
+
 void main()
 {
-    vec3 FragPos = texture(Position, TexCoords).rgb;
+    // depth
+    float depth = texture(DepthTex, TexCoords).r;
+    // reconstruct world position from depth texture
+    vec3 worldPos = worldPosFromDepth(depth);
+
     // DiffuseColor
     vec3 Diffuse = texture(DiffuseSpecular, TexCoords).rgb;
     // feature map
@@ -88,15 +106,14 @@ void main()
     // world normal map
     vec3 normal = texture(Normal, TexCoords).rgb;          //[0,1]
     normal = normalize(2.0 * normal - 1.0);                 //[-1,1]
-    // depth
-    float depth = texture(DepthTex, TexCoords).r;
+
     vec3 waterColor = vec3(0.0);
     if (Diffuse == vec3(0.0)) {
-        vec4 positionInView = view * vec4(FragPos, 1.0);
-//        vec3 vDir = normalize(-positionInView.xyz);
-        vec3 vDir = viewPos - FragPos;
-        vDir = normalize(view * vec4(vDir, 1.0f)).xyz;
-        vec3 norm = mat3(view) * normal;
+        vec4 positionInView = view * vec4(worldPos, 1.0);
+        vec3 vDir = normalize(-positionInView.xyz);
+        // vec3 vDir = viewPos - worldPos;
+        // vDir = normalize(view * vec4(vDir, 1.0f)).xyz;
+        vec3 norm = vec3(view * vec4(normal, 1));
         vec3 reflectDir = normalize(reflect(vDir, norm));
         vec2 uv = rayMarch(positionInView.xyz, reflectDir);
         waterColor = textureLod(DiffuseSpecular, uv, 1).rgb;

@@ -102,7 +102,7 @@ void main() {
     vec3 final = skyColor.rgb;
     //    final += getBloom(final) * 0.8;
     gDiffuseSpecular = vec4(vec3(0.0), 1.0);
-    gNormal = vec3(0.0, 1.0, 1.0);
+    gNormal = fs_in.Normal;
     gPosition = fs_in.FragPos;
     gWaterTex = vec4(final, 0.7);
 }

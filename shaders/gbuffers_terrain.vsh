@@ -18,12 +18,15 @@ uniform mat4 view;
 uniform mat4 projection;
 uniform mat4 lightSpaceMatrix;
 
+uniform sampler2D normal;
+
 void main(){
+    vec3 norm = texture(normal, texCoord).rgb;
     vec3 position = vec3(aPos.x, aPos.y, aPos.z);
 //    Height = aPos.y;
 //    aColor = color;
     vs_out.FragPos = vec3(model * vec4(position, 1.0f));
-//    vs_out.Normal = transpose(inverse(mat3(model))) * aNormal;
+    vs_out.Normal = norm;
     vs_out.TexCoords = texCoord;
 //    vs_out.FragPosLightSpace = lightSpaceMatrix * vec4(vs_out.FragPos, 1.0f);
     gl_Position = projection * view * model * vec4(position, 1.0);

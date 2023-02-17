@@ -24,6 +24,8 @@ void main() {
 //    worldPosition.y += 0.8 * (sin(worldPosition.z * 4 + worldTime * 1.5)  + cos(worldPosition.x * 4 + worldTime * 1.5));
     vs_out.FragPos = worldPosition.xyz;
     vs_out.positionInViewCoord = projection * worldPosition;
+    // 修复了法线，由于水等比例放大，所以不需要法线矩阵了
+    // vs_out.Normal = mat3(transpose(inverse(model))) * vec3(0, 1, 0);
     vs_out.Normal = vec3(0, 1, 0);
     vs_out.TexCoords = texCoord;
     gl_Position = projection *  view * worldPosition;
