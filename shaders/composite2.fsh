@@ -28,6 +28,9 @@ uniform vec3 viewPos;
 uniform vec3 lightColor;
 uniform vec3 lightDirection;
 
+uniform int SCR_WIDTH;
+uniform int SCR_HEIGHT;
+
 float random(vec2 uv) {
     return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123); //simple random function
 }
@@ -55,27 +58,7 @@ float getWave(vec3 pos) {
     return noise2 * 0.6 + 0.4;;
 }
 
-// Raymarch algorithm, return uv coordinates(vec2)
-vec2 rayMarch(vec3 reflPosition, vec3 reflDir) {
-    int steps = 20;
-    vec3 reflPos = reflPosition;
-    for (int i = 0; i < steps; i++) {
-        reflPos += reflDir * 1.0;
-        vec4 UV = projection * vec4(reflPos, 1.0);
-        UV.xyz /= UV.w;
-        UV.xyz = UV.xyz * 0.5 + 0.5;
-        if (UV.x < 0 || UV.x > 1 || UV.y < 0 || UV.y > 1) {
-            break;
-        }
-        float worldDepth = linearizeDepth(texture(DepthTex, UV.st).r);
-        float curDepth = linearizeDepth(UV.z);
-        if (abs(worldDepth) - abs(curDepth) < 0 || i == steps - 1) {
-            return UV.st;
-        }
-    }
-    return vec2(0.0);
-}
-
+// reconstruct world position from depth texture
 vec3 worldPosFromDepth(float depth) {
     float z = depth * 2.0 - 1.0;
 
@@ -90,13 +73,48 @@ vec3 worldPosFromDepth(float depth) {
     return worldSpacePosition.xyz;
 }
 
+// reconstruct view position from depth texture
+vec3 positionViewFromDepth(float depth) {
+    float z = depth * 2.0 - 1.0;
+
+    vec4 clipSpacePosition = vec4(TexCoords * 2.0 - 1.0, z, 1.0);
+    vec4 viewSpacePosition = inverseP * clipSpacePosition;
+
+    // Perspective division
+    viewSpacePosition /= viewSpacePosition.w;
+
+    return viewSpacePosition.xyz;
+}
+
+bool rayIsOutofScreen(vec2 ray) {
+    return (ray.x > 1 || ray.y > 1 || ray.x < 0 || ray.y < 0) ? true : false;
+}
+
+vec3 rayTrace(vec3 rayPos, vec3 dir, int iterationCount) {
+    float sampleDepth;
+    vec3 hitColor = vec3(0.0f);
+    bool hit = false;
+
+    for(int i = 0; i < 256; i++) {
+        rayPos += dir;
+        if(rayIsOutofScreen(rayPos.xy)) {
+            break;
+        }
+        sampleDepth = texture(DepthTex, rayPos.xy).r;
+        float depthDif = rayPos.z - sampleDepth;
+        if(depthDif >= 0 && depthDif < 0.00001) {
+            hit = true;
+            hitColor = texture(DiffuseSpecular, rayPos.xy).rgb;
+            break;
+        }
+    }
+    return hitColor;
+}
+
 void main()
 {
     // depth
     float depth = texture(DepthTex, TexCoords).r;
-    // reconstruct world position from depth texture
-    vec3 worldPos = worldPosFromDepth(depth);
-
     // DiffuseColor
     vec3 Diffuse = texture(DiffuseSpecular, TexCoords).rgb;
     // feature map
@@ -109,21 +127,48 @@ void main()
 
     vec3 waterColor = vec3(0.0);
     if (Diffuse == vec3(0.0)) {
-        vec4 positionInView = view * vec4(worldPos, 1.0);
-        vec3 vDir = normalize(-positionInView.xyz);
-        // vec3 vDir = viewPos - worldPos;
-        // vDir = normalize(view * vec4(vDir, 1.0f)).xyz;
-        vec3 norm = vec3(view * vec4(normal, 1));
-        vec3 reflectDir = normalize(reflect(vDir, norm));
-        vec2 uv = rayMarch(positionInView.xyz, reflectDir);
-        waterColor = textureLod(DiffuseSpecular, uv, 1).rgb;
-        if (waterColor != vec3(0.0)) {
-//            FragColor = vec4(mix(water.rgb, waterColor.rgb, 0.5), 1.0);
-            FragColor = 0.5 * vec4(waterColor.rgb, 1.0);
-        } else {
-            FragColor = vec4(water.rgb, 1.0);
+        float maxRayDistance = 100.0f;
+
+        // View Space ray calculation
+        vec3 pixelPositionTexture;
+        pixelPositionTexture.xy = vec2(gl_FragCoord.x / SCR_WIDTH,
+                                       gl_FragCoord.y / SCR_HEIGHT);
+        vec3 normalView = texture(Normal, pixelPositionTexture.xy).rgb;
+        normalView = mat3(view) * normalView;
+        float pixelDepth = texture(DepthTex, pixelPositionTexture.xy).r;
+        pixelPositionTexture.z = pixelDepth;
+        vec4 positionView = inverseP * vec4(pixelPositionTexture * 2 - 1, 1);
+        positionView /= positionView.w;
+        vec3 reflectionView = normalize(reflect(positionView.xyz, normalView));
+        if(reflectionView.z > 0) {
+            FragColor = water;
+            return;
+        }
+        vec3 rayEndPositionView = positionView.xyz + reflectionView * maxRayDistance;
+
+        // UV Space ray calculation
+        vec4 rayEndPositionTexture = projection * vec4(rayEndPositionView, 1);
+        rayEndPositionTexture /= rayEndPositionTexture.w;
+        rayEndPositionTexture.xyz = rayEndPositionTexture.xyz * 0.5 + 0.5;
+        vec3 rayDirectionTexture = rayEndPositionTexture.xyz - pixelPositionTexture;
+
+        ivec2 screenSpaceStartPosition = ivec2(pixelPositionTexture.x * SCR_WIDTH,
+                                               pixelPositionTexture.y * SCR_WIDTH);
+        ivec2 screenSpaceEndPosition = ivec2(rayEndPositionTexture.x * SCR_WIDTH,
+                                             rayEndPositionTexture.y * SCR_WIDTH);
+        ivec2 screenSpaceDistance = screenSpaceEndPosition - screenSpaceStartPosition;
+        int screenSpaceMaxDistance = max(abs(screenSpaceDistance.x), abs(screenSpaceDistance.y)) / 2;
+        rayDirectionTexture /= max(screenSpaceMaxDistance, 0.001f);
+                                               
+        // tracing
+        vec3 outColor = rayTrace(pixelPositionTexture, rayDirectionTexture, screenSpaceMaxDistance);
+        if(outColor == vec3(0.0f)) FragColor = water;
+        else {
+            FragColor = vec4(outColor, 1.0);
+
         }
         return;
     }
+
     FragColor = vec4(Diffuse, 1.0);
 }

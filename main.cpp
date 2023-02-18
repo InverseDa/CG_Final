@@ -1097,6 +1097,8 @@ void renderComposite2() {
     composite2Shader->set3Vector("viewPos", camera.cameraPos);
     composite2Shader->set3Vector("lightColor", lightColor);
     composite2Shader->set3Vector("lightDirection", glm::vec3(0) - lightPos);
+    composite2Shader->setInt("SCR_WIDTH", WINDOW_WIDTH);
+    composite2Shader->setInt("SCR_HEIGHT", WINDOW_HEIGHT);
     screen::Draw(*composite2Shader);
 }
 
