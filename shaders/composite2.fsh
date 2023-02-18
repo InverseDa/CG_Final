@@ -128,12 +128,16 @@ void main()
     vec3 waterColor = vec3(0.0);
     if (Diffuse == vec3(0.0)) {
         float maxRayDistance = 100.0f;
+        float wave = getWave(worldPosFromDepth(depth));
 
         // View Space ray calculation
         vec3 pixelPositionTexture;
         pixelPositionTexture.xy = vec2(gl_FragCoord.x / SCR_WIDTH,
                                        gl_FragCoord.y / SCR_HEIGHT);
         vec3 normalView = texture(Normal, pixelPositionTexture.xy).rgb;
+        // 增加法线扰动
+        normalView.z += 0.05 * (((wave - 0.4) / 0.6) * 2 - 1);
+        // trans to View space
         normalView = mat3(view) * normalView;
         float pixelDepth = texture(DepthTex, pixelPositionTexture.xy).r;
         pixelPositionTexture.z = pixelDepth;
@@ -164,8 +168,8 @@ void main()
         vec3 outColor = rayTrace(pixelPositionTexture, rayDirectionTexture, screenSpaceMaxDistance);
         if(outColor == vec3(0.0f)) FragColor = water;
         else {
+            outColor = outColor;
             FragColor = vec4(outColor, 1.0);
-
         }
         return;
     }
