@@ -1097,8 +1097,13 @@ void renderComposite2() {
     composite2Shader->set3Vector("viewPos", camera.cameraPos);
     composite2Shader->set3Vector("lightColor", lightColor);
     composite2Shader->set3Vector("lightDirection", glm::vec3(0) - lightPos);
+#ifdef __APPLE__
+    composite2Shader->setInt("SCR_WIDTH", WINDOW_WIDTH * 2);
+    composite2Shader->setInt("SCR_HEIGHT", WINDOW_HEIGHT * 2);
+#else
     composite2Shader->setInt("SCR_WIDTH", WINDOW_WIDTH);
     composite2Shader->setInt("SCR_HEIGHT", WINDOW_HEIGHT);
+#endif
     screen::Draw(*composite2Shader);
 }
 
