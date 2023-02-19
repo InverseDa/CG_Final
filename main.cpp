@@ -46,39 +46,37 @@ const int RENDER_SHADOW = 0;
 const int RENDER_GBUFFER = 1;
 const int RENDER_WATER_VP = 2;
 
-/////////////////////////////////////////////Camera/////////////////////////////////////////////
-//  FPS风格摄像机
+// =========================================== Camera ===========================================
+//  FPS style camera
 Camera camera(glm::vec3(-20.0f, 60.0f, -20.0f),
               glm::vec3(0.0f, 0.0f, 1.0f),
               glm::vec3(0.0f, 1.0f, 0.0f),
               0.0f,
               -90.0f,
               45.0f);
-//  timing初始化
+//  timing initialize
 float deltaTime = 0.0f; //  time between current frame and last frame
 float lastFrame = 0.0f;
-//  鼠标光标初始化
+//  mouse cursor initialize
 float lastX = 400;
 float lastY = 300;
-//  第一次使用鼠标
+
 bool firstMouse = true;
-//  太阳旋转
+//  sun rotate
 bool isRotate = false;
-//  view矩阵
+//  view matrix
 glm::mat4 view = glm::mat4(1.0f);
-//  投影矩阵，实质为透视矩阵
+//  projection matrix
 glm::mat4 projection = glm::mat4(1.0f);
 GLFWwindow* window;
-// lightPos
+// lightPosition
 glm::vec3 lightPos(3024.0f, 1000.0f, 3024.0f);
 glm::vec3 lightColor(0.95, 1.0, 0.86);
 glm::mat4 lightProjection, lightView;
 glm::mat4 lightSpaceMatrix;
 // smallLight
 glm::vec3 smallLight(800, 100, 500);
-// dotCamera
-glm::vec3 dotCameraPos(-20.0f, 250.0f, -20.0f);
-/////////////////////////////////////////////HeightMap/////////////////////////////////////////////
+// ========================================= HeightMap =========================================
 //  terrain
 std::vector<float> terrainVertices;
 std::vector<float> terrainColor, terrainTexCoord;
@@ -95,7 +93,7 @@ int nChannels;
 unsigned int dynamicCubeMapTexture;
 unsigned int dynamicCubeMapFrameBuffers[6];
 unsigned int dynamicCubeMapTexSize;
-/////////////////////////////////////////////VAO、VBO、EBO/////////////////////////////////////////////
+// ======================================== BufferObject ========================================
 //  VAO VBO EBO
 unsigned int terrainVAO;
 unsigned int terrainVerticesVBO;
@@ -117,7 +115,7 @@ GLuint mirrorFBO;
 GLuint mirrorTex;
 GLuint mirrorDBO[1];
 GLuint mirrorRBO;
-/////////////////////////////////////////////Shaders/////////////////////////////////////////////
+// =========================================== Shader =========================================== 
 Shader* terrainShader;
 Shader* skyBoxShader;
 Shader* waterShader;
@@ -129,24 +127,24 @@ Shader* composite1Shader;
 Shader* composite2Shader;
 Shader* waterReflectionShader;
 Shader* robotShader;
-/////////////////////////////////////////////TextureID/////////////////////////////////////////////
+// ========================================== TextureID ========================================== 
 unsigned int skyBoxTextureID;
 unsigned int noisetex;
 unsigned int terrainTextureID;
 unsigned int terrainSpecular;
 unsigned int terrainNormal;
 unsigned int waterTextureID;
-/////////////////////////////////////////////Model/////////////////////////////////////////////
+// ============================================ Model ============================================ 
 Model tree;
 Model sun;
 Model nanosuit;
-
+// ========================================= FrameBuffer ========================================= 
 FrameBuffer* gbuffer;
 FrameBuffer* composite1Buffer;
 
 /**
  * @brief screen
- *
+ * Draw: Draw an quad on the screen
  */
 struct screen {
     static void Draw(Shader shader) {
@@ -157,9 +155,9 @@ struct screen {
 } screen;
 
 /**
- * @brief 用于相应键盘输入输出的回掉函数
+ * @brief Callback function for responding to keyboard input and output.
  *
- * @param window
+ * @param window: glfw Window
  */
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -210,6 +208,13 @@ void processInput(GLFWwindow* window) {
         isRotate = false;
 }
 
+/**
+ * @brief Callback function for responding to mouse input and output.
+ * 
+ * @param window : glfw Window
+ * @param xPos : the position X of mouse
+ * @param yPos : the position Y of mouse
+ */
 void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
     if (firstMouse) {
         lastX = xPos;
@@ -235,7 +240,10 @@ void scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
     camera.processScrollMovement(yOffset);
 }
 
-//  利用高度图生成地形terrain
+/**
+ * @brief Terrain generation using height maps.
+ * 
+ */
 void loadHeightMap() {
     int dwidth, dheight, dn;
     unsigned char* heightMap =
@@ -290,6 +298,10 @@ void loadHeightMap() {
     }
 }
 
+/**
+ * @brief Load water function
+ * 
+ */
 void loadWater() {
     const float planeHeight = 0.0f;
 
@@ -1136,7 +1148,7 @@ void freeMemory() {
     delete composite1Buffer;
 }
 
-/////////////////////////////////////////////main/////////////////////////////////////////////
+// ============================================ Main ============================================ 
 int main() {
     initGLFW();
     initShaders();
@@ -1158,7 +1170,7 @@ int main() {
         lastFrame = currentFrame;
 
         processInput(window);
-        /////////////////////////previous settings/////////////////////////
+        // ===================== Previous Settings ======================
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         view = camera.getView();
@@ -1166,9 +1178,9 @@ int main() {
                                       WINDOW_WIDTH * 1.0f / WINDOW_HEIGHT,
                                       near_plane,
                                       far_plane);
-        /////////////////////////shadowMapping/////////////////////////
+        // ====================== Shadow Mapping =======================
         renderDepthMap();
-        /////////////////////////rendering/////////////////////////
+        // ======================== Rendering ==========================
 #ifdef __APPLE__
         glViewport(0, 0, WINDOW_WIDTH * 2, WINDOW_HEIGHT * 2);
 #else
@@ -1177,7 +1189,7 @@ int main() {
         renderGBuffer();
         renderComposite1();
         renderComposite2();
-        /////////////////////////debugger/////////////////////////
+        // ======================== Debugger ===========================
         glDisable(GL_DEPTH_TEST);
 #ifdef __APPLE__
         glViewport(0, 0, WINDOW_WIDTH * 2 / 3, WINDOW_HEIGHT * 2 / 3);
