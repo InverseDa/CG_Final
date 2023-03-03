@@ -12,11 +12,13 @@
 vcpkg install glfw assimp
 ```
 
-之后使用
+之后使用cmake构建（推荐用Visual Studio的MSVC）
 
 ```cpp
-cmake -B .
+cmake -DCMAKE_TOOLCHAIN_FILE=<path\to\vcpkg>\scripts\buildsystems\vcpkg.cmake -B . -G "Visual Studio 17 2022"
 ```
+
+构建完毕后打开sln文件即可
 
 ### Arch Linux
 
