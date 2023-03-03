@@ -54,8 +54,8 @@ sudo chmod +x CG_Final
 
 我们专门用来G-Buffer的着色器统一用gbuffers_xxx.vsh/fsh来命名，而后处理统一用compositex.vsh/fsh来命名，本大作业的shaders文件结构大致如下：
 
+```
 ./shaders:
-
 ├── composite1.fsh
 ├── composite1.vsh
 ├── composite2.fsh
@@ -80,6 +80,7 @@ sudo chmod +x CG_Final
 ├── shadow.vsh
 ├── sky.fsh
 └── sky.vsh
+```
 
 为了实现这个技术，我们需要用到OpenGL中比较强大的帧缓冲（Frame Buffer）来实现G-Buffer，这个帧缓冲将输出四张贴图。
 
