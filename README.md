@@ -1,8 +1,8 @@
 # CG_Final : 2020级计算机图形学期末大作业
 
-# 构建
+## 构建
 
-## Windows
+### Windows
 
 对于Windows用户，需要安装vcpkg：[https://vcpkg.io/en/index.html](https://vcpkg.io/en/index.html)
 
@@ -18,7 +18,7 @@ vcpkg install glfw assimp
 cmake -B .
 ```
 
-## Arch Linux
+### Arch Linux
 
 对于Arch Linux用户，需要用pacman安装glfw和assimp
 
@@ -40,9 +40,9 @@ sudo chmod +x CG_Final
 
 最后执行即可。
 
-# 技术细节
+## 技术细节
 
-## 1. 延迟渲染管线
+### 1. 延迟渲染管线
 
 本次大作业摒弃了简单的前向渲染，采用基于帧缓冲的G-Buffer。这样，最终的输出就是由G-Buffers合成后的贴图，这样的性能就更高，因为在摄像头视线以外的片元不渲染。具体过程如下：
 
@@ -153,7 +153,7 @@ gbuffer->init(SCR_WIDTH, SCR_HEIGHT);
 
 因为我们采用的是指针开辟内存，所以用完需要回收内存空间。
 
-## 2. 基于CPU计算和高度图的地形生成算法
+### 2. 基于CPU计算和高度图的地形生成算法
 
 高度图一是张黑白的贴图，其颜色属性代表的含义是越黑即对应的片元y轴越小，越白即对应的片元y轴越大。通过渲染一张高度图，就可以生成对应的地形。因为这个算法是在CPU计算出来的，所以叫做基于CPU计算和高度图的地形生成算法。这个算法的时间复杂度是$O(n^2)$，但由于地图不大，并且一旦生成完毕便不再执行，所以在一定的地图规模下，这个算法还是相对优的。
 
@@ -332,7 +332,7 @@ void main() {
 
 ![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%202.png)
 
-## 3. 阴影映射和PCF软阴影
+### 3. 阴影映射和PCF软阴影
 
 定义一个专门渲染阴影的帧缓冲，然后先以光源为视角渲染出一张灰度的深度贴图。给阴影上色的时候先判断当前深度和深度图的深度大小，如果小的话说明需要上阴影，于是涂黑。这是最基础的阴影映射部分，为此我们先定义一个阴影映射所使用的帧缓冲：
 
@@ -476,7 +476,7 @@ float ShadowCalculation(vec4 fragPos) {
 
 ![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%204.png)
 
-## 4. 环境贴图
+### 4. 环境贴图
 
 环境贴图用于构建天空盒，这样可以极大的提高场景的美观。需要注意的是，环境贴图最好是静态的，另外我们希望天空是“触不可及”的，所以需要去除位移因素，使得天空永远相对于人不动。
 
@@ -557,7 +557,7 @@ unsigned int loadSkyBox(std::vector<std::string> &faces) {
 }
 ```
 
-## 5. 动态水
+### 5. 动态水
 
 水我们可以简单理解为一个平面，这个平面我们可以细分成很多小的三角面片，这样我们就可以随意操控这个平面内的任意遵循三角面片关系下的坐标。
 
@@ -613,7 +613,7 @@ void loadWater() {
                    nullptr);
 ```
 
-### (1) 利用最简单的波函数创建动态水
+#### (1) 利用最简单的波函数创建动态水
 
 一个简单的波函数由三角函数叠加：
 
@@ -663,7 +663,7 @@ void main() {
 
 ![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%205.png)
 
-### (2) 噪声图生成水波
+#### (2) 噪声图生成水波
 
 为了方便期间，我们可以使用现成的柏林噪声图，将其导入：
 
@@ -699,7 +699,7 @@ float getWave(vec3 pos) {
     vec3 color = tex * wave;
 ```
 
-### (3) 环境映射
+#### (3) 环境映射
 
 我们可以给水增加环境贴图的颜色，这样会显著提高真实感。由于天空盒的环境贴图UV是三维的，所以可以用三维的反射向量来取色，另外，可以让法向量随着波纹扰动，这样映射后的颜色也是来回变化的：
 
@@ -726,7 +726,7 @@ main:
 
 ![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%208.png)
 
-### (4) Screen Space Reflection
+#### (4) Screen Space Reflection
 
 屏幕空间反射是一种后处理算法，这个算法需要在延迟渲染管线中执行，常用于写水面的反射。
 
