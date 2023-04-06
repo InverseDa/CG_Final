@@ -38,11 +38,9 @@ elseif (CMAKE_HOST_UNIX)
     # dependency
     find_package(glfw3 CONFIG REQUIRED)
     find_package(assimp CONFIG REQUIRED)
-    # find_package(fmt CONFIG REQUIRED)
     # link
     target_link_libraries(CG_Final PRIVATE glfw)
     target_link_libraries(CG_Final PRIVATE assimp)
-    # target_link_libraries(CG_Final PRIVATE fmt)
 elseif (CMAKE_HOST_WIN32)
     message("Checking vcpkg...")
     # vcpkg
@@ -58,7 +56,7 @@ elseif (CMAKE_HOST_WIN32)
 
     aux_source_directory("./" PROJECT_SOURCES)
     add_executable(CG_Final main.cpp src/glad.c include/Texture/Texture.cpp include/Camera/Camera.cpp src/TriMesh.cpp)
-    target_include_directories(CG_Final PRIVATE include)
+    include_directories(${PROJECT_SOURCE_DIR}/include)
 
     # dependency
     find_package(glad CONFIG REQUIRED)
