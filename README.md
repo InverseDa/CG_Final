@@ -9,7 +9,7 @@
 配置好vcpkg之后可以直接使用
 
 ```
-vcpkg install glfw assimp
+vcpkg install glfw3 assimp
 ```
 
 之后使用cmake构建（推荐用Visual Studio的MSVC）
