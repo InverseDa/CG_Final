@@ -8,13 +8,13 @@
 
 配置好vcpkg之后可以直接使用
 
-```cpp
+```
 vcpkg install glfw assimp
 ```
 
 之后使用cmake构建（推荐用Visual Studio的MSVC）
 
-```cpp
+```
 cmake -DCMAKE_TOOLCHAIN_FILE=<path\to\vcpkg>\scripts\buildsystems\vcpkg.cmake -B . -G "Visual Studio 17 2022"
 ```
 
@@ -24,23 +24,42 @@ cmake -DCMAKE_TOOLCHAIN_FILE=<path\to\vcpkg>\scripts\buildsystems\vcpkg.cmake -B
 
 对于Arch Linux用户，需要用pacman安装glfw和assimp
 
-```cpp
+```
 sudo pacman -S glfw assimp
 ```
 
 安装后在项目根目录下使用
 
-```cpp
+```
 cmake -B .; make
 ```
 
 接下来将可执行文件设为可启动
 
-```cpp
+```
 sudo chmod +x CG_Final
 ```
 
 最后执行即可。
+
+### Fedora
+
+对于Fedora用户，需要用dnf安装以下四个包
+```
+sudo dnf -y install glfw glfw-devel assimp assimp-devel
+```
+
+安装后在项目根目录下使用
+
+```
+cmake -B .; make
+```
+
+接下来将可执行文件设为可启动
+
+```
+sudo chmod +x CG_Final
+```
 
 ## 技术细节
 
@@ -48,7 +67,7 @@ sudo chmod +x CG_Final
 
 本次大作业摒弃了简单的前向渲染，采用基于帧缓冲的G-Buffer。这样，最终的输出就是由G-Buffers合成后的贴图，这样的性能就更高，因为在摄像头视线以外的片元不渲染。具体过程如下：
 
-![https://learnopengl.com/img/advanced-lighting/deferred_overview.png](https://learnopengl.com/img/advanced-lighting/deferred_overview.png)
+![](https://learnopengl.com/img/advanced-lighting/deferred_overview.png)
 
 先将所有的片元按照以往的方式渲染，但这次并不输出颜色FragColor，而是将纹理信息、位置信息、高光信息和法线信息存储到四张贴图。这个过程叫做G-Buffer。也就是我们把原有的渲染方式通过G-Buffer输出到四张贴图中。最后，通过后处理技术，再进行渲染。
 
@@ -159,11 +178,11 @@ gbuffer->init(SCR_WIDTH, SCR_HEIGHT);
 
 高度图一是张黑白的贴图，其颜色属性代表的含义是越黑即对应的片元y轴越小，越白即对应的片元y轴越大。通过渲染一张高度图，就可以生成对应的地形。因为这个算法是在CPU计算出来的，所以叫做基于CPU计算和高度图的地形生成算法。这个算法的时间复杂度是$O(n^2)$，但由于地图不大，并且一旦生成完毕便不再执行，所以在一定的地图规模下，这个算法还是相对优的。
 
-![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled.png)
+![](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled.png)
 
 对于任何一张贴图，其数据结构都是二维数组。基于这个理论，我们可以得出高度图的大致结构：
 
-![https://learnopengl.com/img/guest/2021/tessellation/height_map/mesh_ij.png](https://learnopengl.com/img/guest/2021/tessellation/height_map/mesh_ij.png)
+![](https://learnopengl.com/img/guest/2021/tessellation/height_map/mesh_ij.png)
 
 左上角就是高度图的左上角，其他位置都是同理。
 
@@ -207,15 +226,15 @@ gbuffer->init(SCR_WIDTH, SCR_HEIGHT);
 
 为了优化性能，我们需要做切片。也就是利用Element Buffer来定义面片切片。这里给出一种方法：
 
-![https://learnopengl.com/img/guest/2021/tessellation/height_map/mesh_strips.png](https://learnopengl.com/img/guest/2021/tessellation/height_map/mesh_strips.png)
+![](https://learnopengl.com/img/guest/2021/tessellation/height_map/mesh_strips.png)
 
 从正序的方向遍历（即先i后j），组成如上图所示的三角面片。为了达到这样的效果，可以按照这样的顺序构造面片：
 
-![https://learnopengl.com/img/guest/2021/tessellation/height_map/mesh_strip_generation.png](https://learnopengl.com/img/guest/2021/tessellation/height_map/mesh_strip_generation.png)
+![](https://learnopengl.com/img/guest/2021/tessellation/height_map/mesh_strip_generation.png)
 
 我们可以按照012345的顺序存储切片序列，这样012是一个三角形，345是一个三角形...推广至任意位置的：
 
-![https://learnopengl.com/img/guest/2021/tessellation/height_map/mesh_strip_generation_generic.png](https://learnopengl.com/img/guest/2021/tessellation/height_map/mesh_strip_generation_generic.png)
+![](https://learnopengl.com/img/guest/2021/tessellation/height_map/mesh_strip_generation_generic.png)
 
 注意到我们没有渲染123，234的三角形，这是因为这样可以优化算法，避免多次计算。因为012和345可以合成一个矩形，在误差允许范围内这是可行的。
 
@@ -247,7 +266,7 @@ gbuffer->init(SCR_WIDTH, SCR_HEIGHT);
         }
 ```
 
-![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%201.png)
+![](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%201.png)
 
 注意到，我们之前还顺便传入了地形中每个顶点的UV坐标：
 
@@ -332,7 +351,7 @@ void main() {
 }
 ```
 
-![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%202.png)
+![](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%202.png)
 
 ### 3. 阴影映射和PCF软阴影
 
@@ -375,12 +394,10 @@ void initDepthMap() {
 ```cpp
 void renderDepthMap() {
     glEnable(GL_DEPTH_TEST);
-    lightProjection =
-        glm::ortho(-1000.0f, 1000.0f, -1000.0f, 1000.0f, 1.0f, 100000.0f);
+    lightProjection = glm::ortho(-1000.0f, 1000.0f, -1000.0f, 1000.0f, 1.0f, 100000.0f);
     //    lightProjection = glm::perspective(glm::radians(camera.fov),
     //    WINDOW_WIDTH * 1.0f / WINDOW_HEIGHT, 0.1f, 100000.0f);
-    lightView =
-        glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+    lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
     lightSpaceMatrix = lightProjection * lightView;
     shadowShader->use();
     shadowShader->set4Matrix("lightSpaceMatrix", lightSpaceMatrix);
@@ -416,16 +433,18 @@ void main() {
 
 因为我们不对绘制任何片元，只是在shadowMapFBO的缓冲区下（不可见）的时候绘制深度图，所以只需要传递坐标信息即可。
 
-其中，MVP变换矩阵中$\bold{lightSpaceMatrix}$ 的值如下：
+其中，MVP变换矩阵中$lightSpaceMatrix$ 的值如下：
 
 $$
-\bold{lightSpaceMatrix}=\bold{lightProjection}\times\bold{lightView}\\
-\bold{lightView}=\bold{LookAt}(\vec{sun})
+\begin{aligned}
+&lightSpaceMatrix=lightOrthoProjection\times lightView\\
+&lightView=LookAt(\vec{sun})
+\end{aligned}
 $$
 
 而投影矩阵我们采用正射投影而不是透视投影。这是因为正交投影矩阵并不会将场景用透视图进行变形，所有视线/光线都是平行的，这使它对于定向光来说是个很好的投影矩阵。然而透视投影矩阵，会将所有顶点根据透视关系进行变形，结果因此而不同。
 
-![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%203.png)
+![](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%203.png)
 
 而基本的阴影绘制思路如下：
 
@@ -476,7 +495,7 @@ float ShadowCalculation(vec4 fragPos) {
 
 为阴影阻挡进行测试，并最终通过样本的总数目将结果平均化。
 
-![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%204.png)
+![](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%204.png)
 
 ### 4. 环境贴图
 
@@ -567,7 +586,9 @@ unsigned int loadSkyBox(std::vector<std::string> &faces) {
 
 ```cpp
 const int WATER_VERTICES_HEIGHT_AND_WIDTH = 410;
+
 ...
+
 void loadWater() {
     const float planeHeight = 0.0f;
 
@@ -608,7 +629,7 @@ void loadWater() {
 绘制代码如下，因为使用索引存储，所以绘制代码很简单：
 
 ```cpp
-        glBindVertexArray(waterVAO);
+    glBindVertexArray(waterVAO);
     glDrawElements(GL_TRIANGLES,
                    static_cast<int>(waterIndices.size()),
                    GL_UNSIGNED_INT,
@@ -663,13 +684,13 @@ void main() {
 
 其中worldPosition就是顶点的世界坐标，debug模式中能清晰看到波动效果。
 
-![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%205.png)
+![](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%205.png)
 
 #### (2) 噪声图生成水波
 
 为了方便期间，我们可以使用现成的柏林噪声图，将其导入：
 
-![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%206.png)
+![](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%206.png)
 
 导入后可见：
 
@@ -696,7 +717,7 @@ float getWave(vec3 pos) {
 将波纹合成到最终颜色里：
 
 ```cpp
-        vec3 tex = vec3(texture(waterTexture, fs_in.TexCoords));
+    vec3 tex = vec3(texture(waterTexture, fs_in.TexCoords));
     float wave = getWave(fs_in.FragPos);
     vec3 color = tex * wave;
 ```
@@ -705,10 +726,10 @@ float getWave(vec3 pos) {
 
 我们可以给水增加环境贴图的颜色，这样会显著提高真实感。由于天空盒的环境贴图UV是三维的，所以可以用三维的反射向量来取色，另外，可以让法向量随着波纹扰动，这样映射后的颜色也是来回变化的：
 
-```cpp
+```glsl
 vec4 reflectSky(float wave) {
     vec3 newNormal = fs_in.Normal;
-        newNormal.z += 0.05 * (((wave - 0.4) / 0.6) * 2 - 1);
+    newNormal.z += 0.05 * (((wave - 0.4) / 0.6) * 2 - 1);
     newNormal = normalize(newNormal);
     vec3 I = normalize(fs_in.FragPos - viewPos);
     vec3 R = reflect(I, normalize(newNormal));
@@ -718,15 +739,15 @@ vec4 reflectSky(float wave) {
 
 ...
 main:
-        vec4 skyColor = reflectSky(wave);
+    vec4 skyColor = reflectSky(wave);
     vec3 final = skyColor.rgb;
 ```
 
 直接拿来使用，就可以得到相对真实的水：
 
-![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%207.png)
+![](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%207.png)
 
-![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%208.png)
+![](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%208.png)
 
 #### (4) Screen Space Reflection
 
@@ -737,59 +758,55 @@ main:
 取水面某个世界坐标点P，将P变换到相机坐标下：
 
 $$
-\bold{P'}=\bold{View}\times\bold{P}
+\vec{P'}=View\times\vec{P}
 $$
 
-将$\bold{P'}$ 单位化，就可以得到从相机（人）到该点的相机空间下的入射向量，记作$\bold{T=P'/|P|}$。根据该顶点的法向量，可以得到反射向量$\bold{T'}$。
+将$\vec{P'}$ 单位化，就可以得到从相机（人）到该点的相机空间下的入射向量，记作$T=\vec{P'}/|\vec{P}|$。根据该顶点的法向量，可以得到反射向量$\vec{T'}$。
 
 以水面的顶点为起点，往反射向量的方向叠加。如果当前顶点碰撞到了世界的片元，那么就算反射成功，取碰撞点的颜色，赋值给水面。
 
-```cpp
-                float maxRayDistance = 100.0f;
-        float wave = getWave(worldPosFromDepth(depth));
-
-        // View Space ray calculation
-        vec3 pixelPositionTexture;
-        pixelPositionTexture.xy = vec2(gl_FragCoord.x / SCR_WIDTH,
-                                       gl_FragCoord.y / SCR_HEIGHT);
-        vec3 normalView = texture(Normal, pixelPositionTexture.xy).rgb;
-        // 增加法线扰动
-        normalView.z += 0.05 * (((wave - 0.4) / 0.6) * 2 - 1);
-        // trans to View space
-        normalView = mat3(view) * normalView;
-        float pixelDepth = texture(DepthTex, pixelPositionTexture.xy).r;
-        pixelPositionTexture.z = pixelDepth;
-        vec4 positionView = inverseP * vec4(pixelPositionTexture * 2 - 1, 1);
-        positionView /= positionView.w;
-        vec3 reflectionView = normalize(reflect(positionView.xyz, normalView));
-        if(reflectionView.z > 0) {
-            FragColor = water;
-            return;
-        }
-        vec3 rayEndPositionView = positionView.xyz + reflectionView * maxRayDistance;
-
-        // UV Space ray calculation
-        vec4 rayEndPositionTexture = projection * vec4(rayEndPositionView, 1);
-        rayEndPositionTexture /= rayEndPositionTexture.w;
-        rayEndPositionTexture.xyz = rayEndPositionTexture.xyz * 0.5 + 0.5;
-        vec3 rayDirectionTexture = rayEndPositionTexture.xyz - pixelPositionTexture;
-
-        ivec2 screenSpaceStartPosition = ivec2(pixelPositionTexture.x * SCR_WIDTH,
-                                               pixelPositionTexture.y * SCR_WIDTH);
-        ivec2 screenSpaceEndPosition = ivec2(rayEndPositionTexture.x * SCR_WIDTH,
-                                             rayEndPositionTexture.y * SCR_WIDTH);
-        ivec2 screenSpaceDistance = screenSpaceEndPosition - screenSpaceStartPosition;
-        int screenSpaceMaxDistance = max(abs(screenSpaceDistance.x), abs(screenSpaceDistance.y)) / 2;
-        rayDirectionTexture /= max(screenSpaceMaxDistance, 0.001f);
-
-        // tracing
-        vec3 outColor = rayTrace(pixelPositionTexture, rayDirectionTexture, screenSpaceMaxDistance);
-        if(outColor == vec3(0.0f)) FragColor = water;
-        else {
-            outColor = outColor;
-            FragColor = vec4(outColor, 1.0);
-        }
+```glsl
+    float maxRayDistance = 100.0f;
+    float wave = getWave(worldPosFromDepth(depth))  
+    // View Space ray calculation
+    vec3 pixelPositionTexture;
+    pixelPositionTexture.xy = vec2(gl_FragCoord.x / SCR_WIDTH,
+                                   gl_FragCoord.y / SCR_HEIGHT);
+    vec3 normalView = texture(Normal, pixelPositionTexture.xy).rgb;
+    // 增加法线扰动
+    normalView.z += 0.05 * (((wave - 0.4) / 0.6) * 2 - 1);
+    // trans to View space
+    normalView = mat3(view) * normalView;
+    float pixelDepth = texture(DepthTex, pixelPositionTexture.xy).r;
+    pixelPositionTexture.z = pixelDepth;
+    vec4 positionView = inverseP * vec4(pixelPositionTexture * 2 - 1, 1);
+    positionView /= positionView.w;
+    vec3 reflectionView = normalize(reflect(positionView.xyz, normalView));
+    if(reflectionView.z > 0) {
+        FragColor = water;
         return;
+    }
+    vec3 rayEndPositionView = positionView.xyz + reflectionView * maxRayDistance    
+    // UV Space ray calculation
+    vec4 rayEndPositionTexture = projection * vec4(rayEndPositionView, 1);
+    rayEndPositionTexture /= rayEndPositionTexture.w;
+    rayEndPositionTexture.xyz = rayEndPositionTexture.xyz * 0.5 + 0.5;
+    vec3 rayDirectionTexture = rayEndPositionTexture.xyz - pixelPositionTexture 
+    ivec2 screenSpaceStartPosition = ivec2(pixelPositionTexture.x * SCR_WIDTH,
+                                           pixelPositionTexture.y * SCR_WIDTH);
+    ivec2 screenSpaceEndPosition = ivec2(rayEndPositionTexture.x * SCR_WIDTH,
+                                         rayEndPositionTexture.y * SCR_WIDTH);
+    ivec2 screenSpaceDistance = screenSpaceEndPosition - screenSpaceStartPosition;
+    int screenSpaceMaxDistance = max(abs(screenSpaceDistance.x), abs(screenSpaceDistance.y)) / 2;
+    rayDirectionTexture /= max(screenSpaceMaxDistance, 0.001f)  
+    // tracing
+    vec3 outColor = rayTrace(pixelPositionTexture, rayDirectionTexture, screenSpaceMaxDistance);
+    if(outColor == vec3(0.0f)) FragColor = water;
+    else {
+        outColor = outColor;
+        FragColor = vec4(outColor, 1.0);
+    }
+    return;
 ```
 
 而rayMarch主体：
@@ -816,5 +833,5 @@ vec3 rayTrace(vec3 rayPos, vec3 dir, int iterationCount) {
     return hitColor;
 }
 ```
-
-![Untitled](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%209.png)
+最终可以看到结果：
+![](https://cdn.jsdelivr.net/gh/InverseDa/image@master/image/Untitled%209.png)
