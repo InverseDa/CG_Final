@@ -42,16 +42,6 @@ elseif (CMAKE_HOST_UNIX)
     target_link_libraries(CG_Final PRIVATE glfw)
     target_link_libraries(CG_Final PRIVATE assimp)
 elseif (CMAKE_HOST_WIN32)
-    message("Checking vcpkg...")
-    # vcpkg
-    if (DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-        set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-                CACHE STRING "")
-    endif ()
-    if (DEFINED ENV{VCPKG_DEFAULT_TRIPLET} AND NOT DEFINED VCPKG_TARGET_TRIPLET)
-        set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_DEFAULT_TRIPLET}" CACHE STRING "")
-    endif ()
-
     project(CG_Final)
 
     aux_source_directory("./" PROJECT_SOURCES)
@@ -59,12 +49,10 @@ elseif (CMAKE_HOST_WIN32)
     include_directories(${PROJECT_SOURCE_DIR}/include)
 
     # dependency
-    find_package(glad CONFIG REQUIRED)
     find_package(glfw3 CONFIG REQUIRED)
     find_package(assimp CONFIG REQUIRED)
 
     # link
-    target_link_libraries(CG_Final PRIVATE glad::glad)
     target_link_libraries(CG_Final PRIVATE glfw)
     target_link_libraries(CG_Final PRIVATE assimp::assimp)
 endif ()
