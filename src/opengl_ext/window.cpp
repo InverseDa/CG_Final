@@ -1,4 +1,4 @@
-#include "opengl/glfw.hpp"
+#include "opengl_ext/window.hpp"
 
 // Path: src/glfw.cpp
 Init::Init(int major_version, int minor_version, Type type) {
@@ -22,20 +22,14 @@ Init& Init::getInstance(int major_version, int minor_version, Type type) {
 
 Init::~Init() { glfwTerminate(); }
 
-WindowWrapper::WindowWrapper(int width,
-                             int height,
-                             std::string&& title,
-                             int major_version,
-                             int minor_version,
-                             Type type)
+WindowWrapper::WindowWrapper(int width, int height, std::string& title, int major_version, int minor_version, Type type)
     : m_width(width),
       m_height(height),
       m_title(title),
       window(glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr),
              [](GLFWwindow* window) { glfwDestroyWindow(window); }) {
     m_type = type;
-    m_version =
-        std::to_string(major_version) + "." + std::to_string(minor_version);
+    m_version = std::to_string(major_version) + "." + std::to_string(minor_version);
     if (!window) {
         glfwTerminate();
         throw std::runtime_error("Failed to create GLFW window.");
@@ -56,18 +50,8 @@ std::shared_ptr<WindowWrapper> WindowWrapper::createWindow(int width,
                                                            int minor_version,
                                                            Type type) {
     Init::getInstance(major_version, minor_version, type);
-    auto wrapper = std::make_shared<WindowWrapper>(
-        width, height, std::move(title), major_version, minor_version, type);
+    auto wrapper = std::make_shared<WindowWrapper>(width, height, std::move(title), major_version, minor_version, type);
     return wrapper;
-}
-
-void WindowWrapper::mainLoop(std::function<void()> callback) const {
-    makeContextCurrent();
-    while (!shouldClose()) {
-        callback();
-        swapBuffers();
-        pollEvents();
-    }
 }
 
 WindowWrapper::~WindowWrapper() { // TODO: 关闭窗口
@@ -160,4 +144,3 @@ std::string WindowWrapper::getType() const {
 void WindowWrapper::swapBuffers() const { glfwSwapBuffers(window.get()); }
 
 void WindowWrapper::pollEvents() const { glfwPollEvents(); }
-

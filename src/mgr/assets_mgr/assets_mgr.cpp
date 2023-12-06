@@ -1,9 +1,21 @@
+#include <memory>
+
 #include "mgr/assets_mgr/assets_mgr.hpp"
+
+static std::shared_ptr<AssetsMgr> instance = nullptr;
+static std::once_flag singletonFlag;
 
 AssetsMgr::AssetsMgr() : MgrBase("AssetsMgr") {
 }
 
 AssetsMgr::~AssetsMgr() {
+}
+
+std::shared_ptr<AssetsMgr> AssetsMgr::GetInstance() {
+    std::call_once(singletonFlag, [&] {
+        instance = std::make_shared<AssetsMgr>();
+    });
+    return instance;
 }
 
 void AssetsMgr::LoadTexture(const std::string& name, const std::string& path, const TextureType& type) {
@@ -12,14 +24,6 @@ void AssetsMgr::LoadTexture(const std::string& name, const std::string& path, co
 
 std::shared_ptr<Texture> AssetsMgr::GetTexture(const std::string& name) {
     return this->textures[name];
-}
-
-void AssetsMgr::LoadModel(const std::string& name, const std::string& path) {
-    this->models[name] = std::make_shared<Model>(path);
-}
-
-std::shared_ptr<Model> AssetsMgr::GetModel(const std::string& name) {
-    return this->models[name];
 }
 
 void AssetsMgr::LoadShader(const std::string& name, const std::string& vertexPath, const std::string& fragmentPath) {

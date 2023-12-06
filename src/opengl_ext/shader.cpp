@@ -1,9 +1,14 @@
-#include "opengl/shader.hpp"
+#include "opengl_ext/shader.hpp"
 
 std::shared_ptr<Shader>
 Shader::createShaderByPath(const std::string& vertexShaderPath,
                            const std::string& fragmentShaderPath) {
     return std::make_shared<Shader>(vertexShaderPath, fragmentShaderPath);
+}
+
+std::shared_ptr<Shader>
+Shader::createShaderByPath(const std::string& glslPath) {
+    return std::make_shared<Shader>(glslPath);
 }
 
 std::shared_ptr<Shader>
@@ -138,6 +143,12 @@ Shader::Shader(const char* vertexShaderCode, const char* fragmentShaderCode) {
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 }
+
+// TODO: implement this constructor
+Shader::Shader(const std::string& glslPath) {
+}
+
+Shader::~Shader() { glDeleteProgram(id); }
 
 void Shader::use() const { glUseProgram(id); }
 

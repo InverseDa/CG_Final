@@ -20,25 +20,23 @@ enum TextureType {
     HEIGHT
 };
 
-extern const std::unordered_map<TextureType, std::string> textureTypeString;
-
 struct Texture {
     unsigned int id;
     TextureType type;
     std::string path;
 
-    Texture();
+    Texture() = default;
+    Texture(const unsigned int& id);
     Texture(const std::string& path, const TextureType& type);
-    ~Texture();
+    ~Texture() = default;
 
     // getter
     unsigned int getId() const;
     std::string getType() const;
     std::string getPath() const;
 
-    unsigned int loadTexture(const std::string& path);
+    unsigned int LoadTexture(const std::string& path);
+    unsigned int LoadSkyBoxTexture(std::vector<std::string>& faces);
 };
-
-unsigned int loadSkyBox(std::vector<std::string>& faces);
 
 #endif // COMPUTERGRAPHICS_TEXTURE_H

@@ -23,6 +23,8 @@ class Shader {
 
     Shader(const char* vertexShaderCode, const char* fragmentShaderCode);
 
+    ~Shader();
+
     static std::shared_ptr<Shader>
     createShaderByPath(const std::string& vertexShaderPath,
                        const std::string& fragmentShaderPath);

@@ -2,7 +2,7 @@
 
 #include <glad/glad.h>
 #include <memory>
-#include <opengl/glm.hpp>
+#include <opengl_ext/glm.hpp>
 
 enum DIRECTION {
     FORWARD,

@@ -1,4 +1,4 @@
-#include <opengl/camera.hpp>
+#include <opengl_ext/camera.hpp>
 
 Camera::Camera(
     glm::vec3 position, glm::vec3 up, float yaw, float pitch, float fov)

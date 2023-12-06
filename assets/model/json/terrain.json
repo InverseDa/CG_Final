@@ -1,0 +1,10 @@
+{
+  "heightmap.path": "assets/textures/DefaultTerrain/Height Map.png",
+  "heightmap.type": "HeightMap",
+  "diffusemap.path": "assets/textures/DefaultTerrain/Diffuse.png",
+  "diffusemap.type": "DiffuseMap",
+  "normalmap.path": "assets/textures/DefaultTerrain/Height Map_NORM.png",
+  "normalmap.type": "NormalMap",
+  "specularmap.path": "assets/textures/DefaultTerrain/Height Map_SPEC.png",
+  "specularmap.type": "SpecularMap"
+}

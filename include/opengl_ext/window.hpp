@@ -7,7 +7,8 @@
 #include <stdexcept>
 #include <string>
 
-enum Type { CORE, COMPAT };
+enum Type { CORE,
+            COMPAT };
 
 #include <GLFW/glfw3.h>
 
@@ -34,7 +35,7 @@ class WindowWrapper {
   public:
     WindowWrapper(int width,
                   int height,
-                  std::string&& title,
+                  std::string& title,
                   int major_version,
                   int minor_version,
                   Type type);
@@ -83,8 +84,4 @@ class WindowWrapper {
     std::string getType() const;
     std::string getTitle() const;
     /**************** < Get Function And Method > ****************/
-
-    /**************** <         MainLoop        > ****************/
-    void mainLoop(std::function<void()> callback) const;
-    /**************** <         MainLoop        > ****************/
 };

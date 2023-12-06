@@ -7,11 +7,9 @@
 
 #include "opengl_ext/texture.hpp"
 
-const std::unordered_map<TextureType, std::string> textureTypeString = {
-    {TextureType::DIFFUSE, "texture_diffuse"},
-    {TextureType::SPECULAR, "texture_specular"},
-    {TextureType::NORMAL, "texture_normal"},
-    {TextureType::HEIGHT, "texture_height"}};
+Texture::Texture(const unsigned int& id)
+    : id(id) {
+}
 
 Texture::Texture(const std::string& path,
                  const TextureType& type)
@@ -19,7 +17,7 @@ Texture::Texture(const std::string& path,
       path(path) {
 }
 
-unsigned int Texture::loadTexture(const std::string& path) {
+unsigned int Texture::LoadTexture(const std::string& path) {
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
@@ -50,10 +48,11 @@ unsigned int Texture::loadTexture(const std::string& path) {
         exit(0);
     }
 
+    this->id = textureID;
     return textureID;
 }
 
-unsigned int loadSkyBox(std::vector<std::string>& faces) {
+unsigned int Texture::LoadSkyBoxTexture(std::vector<std::string>& faces) {
     unsigned int textureID;
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
@@ -83,5 +82,7 @@ unsigned int loadSkyBox(std::vector<std::string>& faces) {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    this->id = textureID;
     return textureID;
 }
