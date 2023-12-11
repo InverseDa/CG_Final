@@ -1,7 +1,6 @@
 #include <opengl_ext/camera.hpp>
 
-Camera::Camera(
-    glm::vec3 position, glm::vec3 up, float yaw, float pitch, float fov)
+Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch, float fov)
     : cameraPos(position),
       cameraFront(glm::vec3(0.0f, 0.0f, 1.0f)),
       cameraUp(up),
@@ -11,13 +10,12 @@ Camera::Camera(
     cameraRight = glm::cross(cameraFront, cameraUp);
 }
 
-std::shared_ptr<Camera> Camera::createCamera(
-    glm::vec3 position, glm::vec3 up, float yaw, float pitch, float fov) {
+std::shared_ptr<Camera> Camera::CreateCamera(glm::vec3 position, glm::vec3 up, float yaw, float pitch, float fov) {
     return std::make_shared<Camera>(position, up, yaw, pitch, fov);
 }
 
 void Camera::processKeyboard(int direction, float deltaTime) {
-    float velocity = 2.f * deltaTime;
+    const float velocity = 2.f * deltaTime;
     if (direction == FORWARD)
         cameraPos += cameraFront * velocity;
     if (direction == BACKWARD)

@@ -4,26 +4,34 @@
 
 #include "model/terrain.hpp"
 
+#include <framework/config_loader.hpp>
+#include <framework/global_env.hpp>
+
 Terrain::Terrain(const std::string& texturePath) : Model() {
     this->LoadHeightMap(texturePath);
 }
 
 void Terrain::LoadHeightMap(const std::string& texturePath) {
+    std::string heightMapPath = JsonConfigLoader::Read("assets/model/json/terrain.json", "height_path");
+    std::string diffusePath = JsonConfigLoader::Read("assets/model/json/terrain.json", "diffuse_path");
+    std::string specularPath = JsonConfigLoader::Read("assets/model/json/terrain.json", "specular_path");
+    std::string normalPath = JsonConfigLoader::Read("assets/model/json/terrain.json", "normal_path");
+
     int dwidth, dheight, dn;
-    unsigned char* heightMap = stbi_load("assets/textures/DefaultTerrain/Height Map.png", &this->width, &this->height, &this->nChannels, 0);
-    unsigned char* diffuseMap = stbi_load("assets/textures/DefaultTerrain/Diffuse.png", &dwidth, &dheight, &dn, 0);
+    unsigned char* heightMap = stbi_load(heightMapPath.c_str(), &this->width, &this->height, &this->nChannels, 0);
+    unsigned char* diffuseMap = stbi_load(diffusePath.c_str(), &dwidth, &dheight, &dn, 0);
     if (!heightMap || !diffuseMap) {
         std::cout << "Error: Load HeightMap Failed! \n";
         exit(0);
     }
 
-    Texture diffuse("assets/textures/DefaultTerrain/Diffuse.png", TextureType::DIFFUSE);
-    Texture specular("assets/textures/DefaultTerrain/Height Map_SPEC.png", TextureType::SPECULAR);
-    Texture normal("assets/textures/DefaultTerrain/Height Map_NORM.png", TextureType::NORMAL);
+    Global::GetInstance()->GetMgr<AssetsMgr>()->LoadTexture("terrain_diffuse", diffusePath, TextureType::DIFFUSE);
+    Global::GetInstance()->GetMgr<AssetsMgr>()->LoadTexture("terrain_specular", specularPath, TextureType::SPECULAR);
+    Global::GetInstance()->GetMgr<AssetsMgr>()->LoadTexture("terrain_normal", normalPath, TextureType::NORMAL);
 
-    this->textures.push_back(diffuse);
-    this->textures.push_back(specular);
-    this->textures.push_back(normal);
+    this->textures.push_back(*Global::GetInstance()->GetMgr<AssetsMgr>()->GetTexture("terrain_diffuse").get());
+    this->textures.push_back(*Global::GetInstance()->GetMgr<AssetsMgr>()->GetTexture("terrain_specular").get());
+    this->textures.push_back(*Global::GetInstance()->GetMgr<AssetsMgr>()->GetTexture("terrain_normal").get());
 
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;

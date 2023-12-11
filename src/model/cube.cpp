@@ -7,26 +7,20 @@ Cube::Cube(const std::string& jsonPath) : Model() {
                                        "assets/textures/skybox/bottom.jpg",
                                        "assets/textures/skybox/front.jpg",
                                        "assets/textures/skybox/back.jpg"};
-    this->LoadSkyBox(jsonPath, facesPath);
-}
-
-void Cube::LoadSkyBox(const std::string& jsonPath, std::vector<std::string>& faces_path) {
-    Texture skyboxTex;
-    skyboxTex.LoadSkyBoxTexture(faces_path);
-    this->textures.push_back(skyboxTex);
+    Global::GetInstance()->GetMgr<AssetsMgr>()->LoadSkyBoxTexture("skybox", facesPath);
+    this->textures.push_back(*Global::GetInstance()->GetMgr<AssetsMgr>()->GetTexture("skybox"));
 
     this->VerticesSetup(jsonPath);
 }
 
 void Cube::VerticesSetup(const std::string& jsonPath) {
-    nlohmann::json json = Global::GetJsonObject(jsonPath);
-    std::vector<std::vector<float>> vertices = json["vertices"];
+    std::vector<std::vector<float>> vertices = JsonConfigLoader::Read(jsonPath, "vertices");
     std::vector<Vertex> v;
     for (const auto& vertex : vertices) {
         auto& [x, y, z] = std::tie(vertex[0], vertex[1], vertex[2]);
         v.push_back({glm::vec3(x, y, z)});
     }
-    this->meshes.emplace_back(v, this->textures, true);
+    this->meshes.emplace_back(v, this->textures);
 }
 
 void Cube::Draw(Shader& shader) {

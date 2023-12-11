@@ -5,7 +5,6 @@
 
 class Cube : public Model {
   private:
-    void LoadSkyBox(const std::string& jsonPath, std::vector<std::string>& faces_path);
     void VerticesSetup(const std::string& jsonPath);
 
   public:

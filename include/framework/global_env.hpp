@@ -4,6 +4,7 @@
 #include "mgr/assets_mgr/assets_mgr.hpp"
 #include "model/cube.hpp"
 #include "model/terrain.hpp"
+#include "framework/config_loader.hpp"
 
 #include <fstream>
 #include <memory>
@@ -25,7 +26,6 @@ class Global {
     void InitEnv();
     void RegisterEnvPath(std::string name, std::string path);
     std::string GetEnvPath(std::string name);
-    static nlohmann::json GetJsonObject(const std::string& jsonPath);
 
     void InitAssets();
 

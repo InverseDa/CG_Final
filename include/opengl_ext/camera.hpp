@@ -31,7 +31,7 @@ class Camera {
            float pitch = 0.0f,
            float fov = 45.0f);
     static std::shared_ptr<Camera>
-    createCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f),
+    CreateCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f),
                  glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
                  float yaw = -90.0f,
                  float pitch = 0.0f,

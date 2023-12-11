@@ -1,6 +1,12 @@
 #include "opengl_ext/buffer.hpp"
 
-std::shared_ptr<FrameBuffer> FrameBuffer::createFrameBuffer(int width,
+// =================================================================================================
+// =================================================================================================
+// ======================================== FrameBuffer ============================================
+// =================================================================================================
+// =================================================================================================
+
+std::shared_ptr<FrameBuffer> FrameBuffer::CreateFrameBuffer(int width,
                                                             int height) {
     return std::make_shared<FrameBuffer>(width, height);
 }
@@ -60,7 +66,6 @@ void FrameBuffer::bind() {
 
 void FrameBuffer::unbind() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, m_width, m_height);
 }
 
 void FrameBuffer::resize(int width, int height) {
@@ -87,7 +92,13 @@ void FrameBuffer::resize(int width, int height) {
 
 GLuint FrameBuffer::getTexture() const { return m_texture; }
 
-std::shared_ptr<GBuffer> GBuffer::createGBuffer(int width, int height) {
+// =================================================================================================
+// =================================================================================================
+// ========================================== GBuffer ==============================================
+// =================================================================================================
+// =================================================================================================
+
+std::shared_ptr<GBuffer> GBuffer::CreateGBuffer(int width, int height) {
     return std::make_shared<GBuffer>(width, height);
 }
 
@@ -184,14 +195,13 @@ GBuffer::~GBuffer() {
     glDeleteTextures(1, &m_albedoSpec);
 }
 
-void GBuffer::bind() {
+void GBuffer::Bind() {
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glViewport(0, 0, m_width, m_height);
 }
 
-void GBuffer::unbind() {
+void GBuffer::Unbind() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, m_width, m_height);
 }
 
 void GBuffer::resize(int width, int height) {
@@ -245,3 +255,59 @@ GLuint GBuffer::getPosition() const { return m_position; }
 GLuint GBuffer::getNormal() const { return m_normal; }
 
 GLuint GBuffer::getAlbedoSpec() const { return m_albedoSpec; }
+
+// =================================================================================================
+// =================================================================================================
+// ======================================== ShadowBuffer ===========================================
+// =================================================================================================
+// =================================================================================================
+
+std::shared_ptr<ShadowBuffer> ShadowBuffer::CreateShadowBuffer(int width, int height) {
+    return std::make_shared<ShadowBuffer>(width, height);
+}
+
+ShadowBuffer::ShadowBuffer(int width, int height) : m_width(width), m_height(height) {
+    glGenFramebuffers(1, &this->m_fbo);
+
+    // create depth texture
+    glGenTextures(1, &this->m_shadowMap);
+    glBindTexture(GL_TEXTURE_2D, this->m_shadowMap);
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 GL_DEPTH_COMPONENT,
+                 width,
+                 height,
+                 0,
+                 GL_DEPTH_COMPONENT,
+                 GL_FLOAT,
+                 nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // attach depth texture as FBO's depth buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, this->m_fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->m_shadowMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+ShadowBuffer::~ShadowBuffer() {
+    glDeleteFramebuffers(1, &this->m_fbo);
+    glDeleteTextures(1, &this->m_shadowMap);
+}
+
+void ShadowBuffer::Bind() {
+    glBindFramebuffer(GL_FRAMEBUFFER, this->m_fbo);
+    glViewport(0, 0, this->m_width, this->m_height);
+}
+
+void ShadowBuffer::Unbind() {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+GLuint ShadowBuffer::GetShadowMap() {
+    return this->m_shadowMap;
+}

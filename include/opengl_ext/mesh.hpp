@@ -28,8 +28,6 @@ class Mesh {
   public:
     // 标识符，决定是否用EBO
     bool useEBO = true;
-    // 是否是天空盒子
-    bool isSkyBox = false;
 
     unsigned int VAO;
     std::vector<Vertex> vertices;
@@ -38,8 +36,7 @@ class Mesh {
 
     Mesh() = default;
     Mesh(std::vector<Vertex>& vertices,
-         std::vector<Texture>& textures,
-         bool isSkyBox = false);
+         std::vector<Texture>& textures);
     Mesh(std::vector<Vertex>& vertices,
          std::vector<unsigned int>& indices,
          std::vector<Texture>& textures);

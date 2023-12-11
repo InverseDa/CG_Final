@@ -13,7 +13,7 @@ class FrameBuffer {
     GLuint m_texture;
 
   public:
-    static std::shared_ptr<FrameBuffer> createFrameBuffer(int width,
+    static std::shared_ptr<FrameBuffer> CreateFrameBuffer(int width,
                                                           int height);
     FrameBuffer(int width, int height);
     ~FrameBuffer();
@@ -37,16 +37,35 @@ class GBuffer {
     GLuint m_albedoSpec;
 
   public:
-    static std::shared_ptr<GBuffer> createGBuffer(int width, int height);
+    static std::shared_ptr<GBuffer> CreateGBuffer(int width, int height);
     GBuffer(int width, int height);
     ~GBuffer();
 
-    void bind();
-    void unbind();
+    void Bind();
+    void Unbind();
 
     void resize(int width, int height);
 
     GLuint getPosition() const;
     GLuint getNormal() const;
     GLuint getAlbedoSpec() const;
+};
+
+class ShadowBuffer {
+protected:
+    int m_width;
+    int m_height;
+    GLuint m_fbo;
+    GLuint m_rbo;
+    GLuint m_shadowMap;
+
+public:
+    static std::shared_ptr<ShadowBuffer> CreateShadowBuffer(int width, int height);
+    ShadowBuffer(int width, int height);
+    ~ShadowBuffer();
+
+    void Bind();
+    void Unbind();
+
+    GLuint GetShadowMap();
 };

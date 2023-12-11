@@ -28,6 +28,8 @@ struct Texture {
     Texture() = default;
     Texture(const unsigned int& id);
     Texture(const std::string& path, const TextureType& type);
+    // Load Skybox Texture
+    Texture(std::vector<std::string>& faces);
     ~Texture() = default;
 
     // getter

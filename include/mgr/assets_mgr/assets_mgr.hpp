@@ -51,6 +51,7 @@ class AssetsMgr : public MgrBase {
 
     // Texture
     void LoadTexture(const std::string& name, const std::string& path, const TextureType& type = TextureType::DIFFUSE);
+    void LoadSkyBoxTexture(const std::string& name, std::vector<std::string>& faces);
     std::shared_ptr<Texture> GetTexture(const std::string& name);
 
     // Shader

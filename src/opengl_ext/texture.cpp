@@ -15,6 +15,11 @@ Texture::Texture(const std::string& path,
                  const TextureType& type)
     : type(type),
       path(path) {
+    this->LoadTexture(path);
+}
+
+Texture::Texture(std::vector<std::string>& faces) {
+    this->LoadSkyBoxTexture(faces);
 }
 
 unsigned int Texture::LoadTexture(const std::string& path) {

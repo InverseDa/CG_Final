@@ -11,5 +11,6 @@ class JsonConfigLoader {
 private:
     std::unordered_map<std::string, nlohmann::json> cache;
 public:
-    static void Read(const std::string& path, const std::string& key);
+    static nlohmann::json GetJsonObject(const std::string& jsonPath);
+    static nlohmann::json Read(const std::string& path, const std::string& key);
 };

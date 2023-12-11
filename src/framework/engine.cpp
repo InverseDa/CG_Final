@@ -2,6 +2,7 @@
 #include "mgr/assets_mgr/assets_mgr.hpp"
 #include "model/cube.hpp"
 #include <memory>
+#include <mgr/render_mgr/render_mgr.hpp>
 
 Engine::Engine() {
     this->Init();
@@ -19,20 +20,22 @@ void Engine::Init() {
 
 void Engine::InitWindow() {
     // 初始化窗口
-    int width = std::stoi(Global::GetInstance()->GetEnvPath("width"));
-    int height = std::stoi(Global::GetInstance()->GetEnvPath("height"));
-    std::string title = Global::GetInstance()->GetEnvPath("title");
+    int width = JsonConfigLoader::Read("env/settings.json", "width");
+    int height = JsonConfigLoader::Read("env/settings.json", "height");
+    std::string title = JsonConfigLoader::Read("env/settings.json", "title");
     this->window = WindowWrapper::createWindow(width, height, std::move(title));
 }
 
 void Engine::Update() {
+    // 处理键盘和鼠标的输入
 }
 
 void Engine::Render() {
+    Global::GetInstance()->GetMgr<RenderMgr>()->Run();
 }
 
 void Engine::Run() {
-    while (true) {
+    while (!glfwWindowShouldClose(window->get())) {
         this->Update();
         this->Render();
     }

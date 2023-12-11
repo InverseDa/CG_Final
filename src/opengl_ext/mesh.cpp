@@ -18,11 +18,10 @@ Mesh::Mesh(std::vector<Vertex>& vertices,
     SetupMesh();
 }
 
-Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<Texture>& textures, bool isSkyBox) {
+Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<Texture>& textures) {
     this->useEBO = false;
     this->vertices = vertices;
     this->textures = textures;
-    this->isSkyBox = isSkyBox;
 
     SetupMesh();
 }
@@ -49,16 +48,13 @@ void Mesh::Draw(Shader& shader) {
         glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
 
-    if (isSkyBox) glDepthFunc(GL_LEQUAL);
     glBindVertexArray(VAO);
     if(useEBO)
         glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
     else
         glDrawArrays(GL_TRIANGLES, 0, static_cast<unsigned int>(vertices.size()));
-    if (isSkyBox) glDepthFunc(GL_LESS);
 
     glBindVertexArray(0);
-
     glActiveTexture(GL_TEXTURE0);
 }
 
