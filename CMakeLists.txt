@@ -12,7 +12,7 @@ endif (APPLE)
 project(CG_Final)
 
 file(GLOB_RECURSE SOURCE "src/*.cpp")
-add_executable(CG_Final src/newmain.cpp src/glad_src/glad.c ${SOURCE})
+add_executable(CG_Final src/newmain.cpp ${SOURCE} src/glad_src/glad.c)
 
 target_include_directories(CG_Final
         PRIVATE
