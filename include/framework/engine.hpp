@@ -11,6 +11,7 @@ class Engine {
     void InitWindow();
     void Update();
     void Render();
+    void SetDefaultColor();
 
   public:
     Engine();

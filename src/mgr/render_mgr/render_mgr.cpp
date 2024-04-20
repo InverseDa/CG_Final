@@ -1,4 +1,6 @@
 #include "mgr/render_mgr/render_mgr.hpp"
+#include "model/triangle.hpp"
+#include "model/water.hpp"
 
 static std::shared_ptr<RenderMgr> instance = nullptr;
 static std::once_flag singletonFlag;
@@ -30,37 +32,47 @@ void RenderMgr::CompositePass() {
 }
 
 void RenderMgr::GBufferPass() {
-    // this->gbuffer->Bind();
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // // Terrain
-    // glm::mat4 model = glm::mat4(1.0f);
-    // const std::shared_ptr<Shader> terrainShader = Global::GetInstance()->GetMgr<AssetsMgr>()->GetShader("g_terrain");
-    // terrainShader->setMatrix4("model", model);
-    // terrainShader->setMatrix4("view", Global::GetInstance()->GetMgr<CameraMgr>()->GetViewMatrix());
-    // terrainShader->setMatrix4("projection", Global::GetInstance()->GetMgr<CameraMgr>()->GetProjectionMatrix());
-    // terrainShader->setInt("tex", 0);
-    // terrainShader->setInt("specular", 1);
-    // terrainShader->setInt("normal", 2);
-    // Global::GetInstance()->GetMgr<AssetsMgr>()->GetModel<Terrain>("terrain")->Draw(*terrainShader);
-    //
-    // // Nano
-    // model = glm::translate(glm::mat4(1.0f), glm::vec3(800.0f, 30.0f, 500.0f));
-    // model = glm::scale(model, glm::vec3(1.0f));
-    // const std::shared_ptr<Shader> assimpShader = Global::GetInstance()->GetMgr<AssetsMgr>()->GetShader("g_terrain");
-    // assimpShader->use();
-    // assimpShader->setMatrix4("model", model);
-    // assimpShader->setMatrix4("view", Global::GetInstance()->GetMgr<CameraMgr>()->GetViewMatrix());
-    // assimpShader->setMatrix4("projection", Global::GetInstance()->GetMgr<CameraMgr>()->GetProjectionMatrix());
-    // Global::GetInstance()->GetMgr<AssetsMgr>()->GetModel<AssimpModel>("nanosuit")->Draw(*assimpShader);
-    //
-    // this->gbuffer->Unbind();
+    auto ctx = Global::GetInstance();
+    auto cameraMgr = ctx->GetMgr<CameraMgr>();
+    //    this->gbuffer->Bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Terrain
+    glm::mat4 model = glm::mat4(1.0f);
+    const std::shared_ptr<Shader> terrainShader = ctx->GetMgr<AssetsMgr>()->GetShader("g_terrain");
+    terrainShader->use();
+    terrainShader->setMatrix4("model", model);
+    terrainShader->setMatrix4("view", ctx->GetMgr<CameraMgr>()->GetViewMatrix());
+    terrainShader->setMatrix4("projection", ctx->GetMgr<CameraMgr>()->GetProjectionMatrix());
+    terrainShader->setInt("tex", 0);
+    terrainShader->setInt("specular", 1);
+    terrainShader->setInt("normal", 2);
+    ctx->GetMgr<AssetsMgr>()->GetModel<Terrain>("terrain")->Draw(*terrainShader);
+
+    // Nano
+    model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+    const std::shared_ptr<Shader> assimpShader = ctx->GetMgr<AssetsMgr>()->GetShader("g_model");
+    assimpShader->use();
+    assimpShader->setMatrix4("model", model);
+    assimpShader->setMatrix4("view", ctx->GetMgr<CameraMgr>()->GetViewMatrix());
+    assimpShader->setMatrix4("projection", ctx->GetMgr<CameraMgr>()->GetProjectionMatrix());
+    ctx->GetMgr<AssetsMgr>()->GetModel<AssimpModel>("nanosuit")->Draw(*assimpShader);
+
+    //    this->gbuffer->Unbind();
+
+    // draw triangle
+    const std::shared_ptr<Shader> triangleShader = ctx->GetMgr<AssetsMgr>()->GetShader("triangle");
+    triangleShader->use();
+    triangleShader->setMatrix4("model", model);
+    triangleShader->setMatrix4("view", cameraMgr->GetViewMatrix());
+    triangleShader->setMatrix4("projection", cameraMgr->GetProjectionMatrix());
+    ctx->GetMgr<AssetsMgr>()->GetModel<Triangle>("triangle")->Draw(*triangleShader);
 }
 
 void RenderMgr::LightPass() {
 }
 
 void RenderMgr::ShadowPass() {
-    this->shadow->Bind();
+    //    this->shadow->Bind();
     // lightProjection = glm::ortho(-1000.0f, 1000.0f, -1000.0f, 1000.0f, 1.0f, 100000.0f);
     // //    lightProjection = glm::perspective(glm::radians(camera.fov),
     // //    WINDOW_WIDTH * 1.0f / WINDOW_HEIGHT, 0.1f, 100000.0f);
@@ -90,5 +102,4 @@ void RenderMgr::ShadowPass() {
     // Global::GetInstance()->GetMgr<AssetsMgr>()->GetModel<AssimpModel>("nanosuit")->Draw(*assimpShader);
     //
     // this->gbuffer->Unbind();
-
 }

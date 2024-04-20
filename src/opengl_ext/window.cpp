@@ -1,6 +1,7 @@
 #include "opengl_ext/window.hpp"
 #include <iostream>
 
+namespace {
 void APIENTRY glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
     // ignore non-significant error/warning codes
     if (id == 131169 || id == 131185 || id == 131218 || id == 131204)
@@ -79,6 +80,10 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severi
     std::cout << std::endl;
     std::cout << std::endl;
 }
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+}
+} // namespace
 
 // Path: src/glfw.cpp
 Init::Init(int major_version, int minor_version, Type type) {
@@ -123,14 +128,12 @@ WindowWrapper::WindowWrapper(int width, int height, std::string& title, int majo
     }
     // 注册类似Vulkan的Validation回掉
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
-    GLint flags;
-    glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
-    if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
-        glEnable(GL_DEBUG_OUTPUT);
-        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(glDebugOutput, nullptr);
-        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-    }
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(glDebugOutput, nullptr);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    // 窗口大小改变回掉
+    glfwSetFramebufferSizeCallback(window.get(), framebuffer_size_callback);
 }
 
 std::shared_ptr<WindowWrapper> WindowWrapper::createWindow(int width,

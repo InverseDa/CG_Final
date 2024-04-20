@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <memory>
 #include <opengl_ext/glm.hpp>
+#include "GLFW/glfw3.h"
 
 enum DIRECTION {
     FORWARD,
@@ -24,6 +25,11 @@ class Camera {
     // Camera options
     float fov;
 
+    bool isFirstMouse{true};
+    float lastX = 0.0f;
+    float lastY = 0.0f;
+    float movementSpeed = .1f;
+
   public:
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f),
            glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
@@ -36,10 +42,8 @@ class Camera {
                  float yaw = -90.0f,
                  float pitch = 0.0f,
                  float fov = 45.0f);
-    void processKeyboard(int direction, float deltaTime);
-    void processMouseMovement(float xoffset,
-                              float yoffset,
-                              bool constrainPitch = true);
+    void processKeyboard(GLFWwindow* window, float deltaTime);
+    void processMouseMovement(GLFWwindow* window, float deltaTime);
     void processMouseScroll(float yoffset);
     glm::mat4 getViewMatrix() const;
     float getFov() const;

@@ -67,6 +67,7 @@ void Terrain::LoadHeightMap(const std::string& texturePath) {
 void Terrain::Draw(Shader& shader) {
     shader.use();
     glBindVertexArray(this->meshes[0].VAO);
+    glBindTexture(GL_TEXTURE_2D, this->textures[0].id);
     for (unsigned int strip = 0; strip < height - 1; ++strip) {
         glDrawElements(GL_TRIANGLE_STRIP, (width * 2), GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * (width * 2) * strip));
     }

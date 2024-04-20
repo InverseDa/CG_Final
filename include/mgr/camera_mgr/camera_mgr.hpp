@@ -1,4 +1,5 @@
 #pragma once
+#include <mutex>
 #include "framework/config_loader.hpp"
 #include "opengl_ext/camera.hpp"
 
@@ -9,10 +10,12 @@ class CameraMgr {
     glm::mat4 litsrcProj;
 
   public:
+    static std::shared_ptr<CameraMgr> GetInstance(glm::vec3 position = {0.f, 0.f, 2.5f}, float fov = 60.f);
+
     CameraMgr(glm::vec3 position, float fov);
-    ~CameraMgr();
-    void ProcessKeyboard(int direction, float deltaTime);
-    void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch);
+    ~CameraMgr() = default;
+    void ProcessKeyboardMovement(GLFWwindow* window, float deltaTime);
+    void ProcessMouseMovement(GLFWwindow* window, float deltaTime);
     void ProcessMouseScroll(float yoffset);
 
     glm::mat4 GetViewMatrix() const;
