@@ -50,7 +50,7 @@ std::shared_ptr<WindowWrapper> WindowWrapper::createWindow(int width,
                                                            int minor_version,
                                                            Type type) {
     Init::getInstance(major_version, minor_version, type);
-    auto wrapper = std::make_shared<WindowWrapper>(width, height, std::move(title), major_version, minor_version, type);
+    auto wrapper = std::make_shared<WindowWrapper>(width, height, title, major_version, minor_version, type);
     return wrapper;
 }
 

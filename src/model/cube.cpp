@@ -17,7 +17,7 @@ void Cube::VerticesSetup(const std::string& jsonPath) {
     std::vector<std::vector<float>> vertices = JsonConfigLoader::Read(jsonPath, "vertices");
     std::vector<Vertex> v;
     for (const auto& vertex : vertices) {
-        auto& [x, y, z] = std::tie(vertex[0], vertex[1], vertex[2]);
+        auto [x, y, z] = std::tie(vertex[0], vertex[1], vertex[2]);
         v.push_back({glm::vec3(x, y, z)});
     }
     this->meshes.emplace_back(v, this->textures);
