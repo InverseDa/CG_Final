@@ -56,10 +56,9 @@ void Global::InitAssets() {
     assetsMgr->LoadShader("composite2", "assets/shaders/composite2.vsh", "assets/shaders/composite2.fsh");
     //    this->GetMgr<AssetsMgr>()->LoadShader("final", "assets/shaders/final.vsh", "assets/shaders/final.fsh");
     assetsMgr->LoadShader("triangle", "assets/shaders/triangle.vsh", "assets/shaders/triangle.fsh");
-    //     加载噪声图
+    // 加载噪声图
     assetsMgr->LoadTexture("perlin_noise", "assets/textures/perlinNoise.png");
-
-    // // 加载模型
+    // 加载模型
     assetsMgr->LoadModel<Cube>().Load("skybox", "assets/model/json/cube.json");
     assetsMgr->LoadModel<AssimpModel>().Load("nanosuit", "assets/model/nanosuit/nanosuit.obj");
     assetsMgr->LoadModel<Terrain>().Load("terrain", "assets/model/json/terrain.json");

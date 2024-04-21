@@ -5,6 +5,7 @@
 #include "model/cube.hpp"
 #include "model/terrain.hpp"
 #include "framework/config_loader.hpp"
+#include "opengl_ext/window.hpp"
 
 #include <fstream>
 #include <memory>
@@ -20,6 +21,7 @@ class Global {
 
   public:
     // 公共全局变量
+    std::shared_ptr<WindowWrapper> window;
     //// 全局光照
     glm::vec3 lightPos = glm::vec3(3024.0f, 1000.0f, 3024.0f);
     glm::vec3 lightColor = glm::vec3(0.95f, 1.0f, 0.86f);

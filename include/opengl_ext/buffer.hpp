@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glad/glad.h"
+#include "glm/vec2.hpp"
 #include <memory>
 #include <iostream>
 #include <unordered_map>
@@ -56,5 +57,6 @@ class FrameBuffer {
     void bind();
     void unbind();
     void resize(int width, int height);
+    glm::vec2 getSize() const { return {m_width, m_height}; };
     GLuint getTexture(std::string name) const { return m_textures.at(name); };
 };

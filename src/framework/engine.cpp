@@ -22,22 +22,24 @@ void Engine::Init() {
 
 void Engine::InitWindow() {
     // 初始化窗口
+    auto ctx = Global::GetInstance();
     int width = JsonConfigLoader::Read("env/settings.json", "width");
     int height = JsonConfigLoader::Read("env/settings.json", "height");
     std::string title = JsonConfigLoader::Read("env/settings.json", "title");
-    this->window = WindowWrapper::createWindow(width, height, std::move(title));
+    ctx->window = WindowWrapper::createWindow(width, height, std::move(title));
 }
 
 void Engine::Update() {
     // 处理键盘和鼠标的输入
     // 高精度时间计算
+    auto ctx = Global::GetInstance();
     auto newTime = std::chrono::high_resolution_clock::now();
     float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
     currentTime = newTime;
 
     auto cameraMgr = Global::GetInstance()->GetMgr<CameraMgr>();
-    cameraMgr->ProcessKeyboardMovement(this->window->get(), frameTime);
-    cameraMgr->ProcessMouseMovement(this->window->get(), frameTime);
+    cameraMgr->ProcessKeyboardMovement(ctx->window->get(), frameTime);
+    cameraMgr->ProcessMouseMovement(ctx->window->get(), frameTime);
 }
 
 void Engine::Render() {
@@ -51,13 +53,14 @@ void Engine::SetDefaultColor(){
 }
 
 void Engine::Run() {
+    auto ctx = Global::GetInstance();
     currentTime = std::chrono::high_resolution_clock::now();
-    while (!this->window->shouldClose()) {
+    while (!ctx->window->shouldClose()) {
         // 设置默认清屏颜色
         this->SetDefaultColor();
         this->Update();
         this->Render();
-        this->window->swapBuffers();
-        this->window->pollEvents();
+        ctx->window->swapBuffers();
+        ctx->window->pollEvents();
     }
 }

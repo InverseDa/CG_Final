@@ -27,6 +27,6 @@ class RenderMgr {
     std::vector<std::pair<GLenum, GLfloat>> GetDepthTextureParams();
     void CompositePass();
     void GBufferPass();
-    void LightPass();
+    void FinalPass();
     void ShadowPass();
 };
