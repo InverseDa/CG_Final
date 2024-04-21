@@ -1,6 +1,6 @@
 #version 330 core
-in vec3 aPos;
-in vec2 texCoord;
+layout(location = 0)in vec3 aPos;
+layout(location = 1)in vec2 texCoord;
 
 out vec2 aTexcoord;
 out VS_OUT{

@@ -8,6 +8,10 @@ class Water : public Model {
   private:
     int width;
     int height;
+    std::vector<std::pair<glm::vec3, glm::vec2>> vertices;
+    std::vector<unsigned int> indices;
+    GLuint VAO, VBO, EBO;
+
     void VerticesSetup(const std::string& texturePath);
 
   public:

@@ -70,12 +70,12 @@ void RenderMgr::CompositePass() {
     glBindTexture(GL_TEXTURE_2D, gbuffer->getTexture("albedoSpec"));
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, gbuffer->getTexture("depth"));
-    //    glActiveTexture(GL_TEXTURE4);
-    //    glBindTexture(GL_TEXTURE_2D, shadow->getTexture("water"));
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->getTexture("water"));
     glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, shadow->getTexture("shadowmap"));
-    //    glActiveTexture(GL_TEXTURE6);
-    //    glBindTexture(GL_TEXTURE_2D, assetsMgr->GetTexture("noise")->getId());
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, assetsMgr->GetTexture("perlin_noise")->getId());
     shader->setInt("gPosition", 0);
     shader->setInt("gNormal", 1);
     shader->setInt("gDiffuseSpecular", 2);
@@ -108,12 +108,12 @@ void RenderMgr::CompositePass() {
     glBindTexture(GL_TEXTURE_2D, composite1->getTexture("albedoSpec"));
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, gbuffer->getTexture("depth"));
-    //    glActiveTexture(GL_TEXTURE4);
-    //    glBindTexture(GL_TEXTURE_2D, composite1->getTexture("water"));
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, composite1->getTexture("water"));
     glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, composite1->getTexture("normal"));
-    //    glActiveTexture(GL_TEXTURE6);
-    //    glBindTexture(GL_TEXTURE_2D, assetsMgr->GetTexture("noise")->getId());
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, assetsMgr->GetTexture("perlin_noise")->getId());
     shader2->setInt("Position", 1);
     shader2->setInt("DiffuseSpecular", 2);
     shader2->setInt("DepthTex", 3);
@@ -149,9 +149,8 @@ void RenderMgr::GBufferPass() {
     auto assetsMgr = ctx->GetMgr<AssetsMgr>();
 
     auto terrainShader = assetsMgr->GetShader("g_terrain");
-    auto triangleShader = ctx->GetMgr<AssetsMgr>()->GetShader("triangle");
-    auto waterShader = ctx->GetMgr<AssetsMgr>()->GetShader("water");
-    auto skyboxShader = ctx->GetMgr<AssetsMgr>()->GetShader("skybox");
+    auto waterShader = assetsMgr->GetShader("g_water");
+    auto skyboxShader = assetsMgr->GetShader("skybox");
 
     this->gbuffer->bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -164,15 +163,41 @@ void RenderMgr::GBufferPass() {
     terrainShader->setInt("tex", 0);
     terrainShader->setInt("specular", 1);
     terrainShader->setInt("normal", 2);
-    ctx->GetMgr<AssetsMgr>()->GetModel<Terrain>("terrain")->Draw(*terrainShader);
+    assetsMgr->GetModel<Terrain>("terrain")->Draw(*terrainShader);
+
     // water
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, assetsMgr->GetTexture("skybox")->getId());
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, assetsMgr->GetTexture("perlin_noise")->getId());
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, shadow->getTexture("shadowmap"));
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, assetsMgr->GetTexture("terrain_diffuse")->getId());
+    model = glm::translate(glm::mat4(1.0f), glm::vec3(-1024.0, 0.00000001f, -1024.0f));
+    model = glm::scale(model, glm::vec3(5.0));
+    waterShader->use();
+    waterShader->setMatrix4("model", model);
+    waterShader->setMatrix4("view", cameraMgr->GetViewMatrix());
+    waterShader->setMatrix4("projection", cameraMgr->GetProjectionMatrix());
+    waterShader->setFloat("worldTime", static_cast<float>(glfwGetTime()));
+    waterShader->setInt("waterTexture", 0);
+    waterShader->setInt("skyBox", 1);
+    waterShader->setInt("noisetex", 2);
+    waterShader->setInt("shadowMap", 3);
+    waterShader->setInt("tex", 4);
+    waterShader->setVector3("lightPos", ctx->lightPos);
+    waterShader->setVector3("viewPos", cameraMgr->GetCameraPosition());
+    waterShader->setFloat("viewHeight", 1980);
+    waterShader->setFloat("viewWidth", 1080);
+    assetsMgr->GetModel<Water>("water")->Draw(*waterShader);
 
     // skybox
     skyboxShader->use();
     skyboxShader->setMatrix4("view", glm::mat4(glm::mat3(cameraMgr->GetViewMatrix())));
     skyboxShader->setMatrix4("projection", cameraMgr->GetProjectionMatrix());
     skyboxShader->setInt("skyBox", 0);
-    ctx->GetMgr<AssetsMgr>()->GetModel<Cube>("skybox")->Draw(*skyboxShader);
+    assetsMgr->GetModel<Cube>("skybox")->Draw(*skyboxShader);
     this->gbuffer->unbind();
 }
 
