@@ -6,11 +6,11 @@
 // =================================================================================================
 // =================================================================================================
 
-std::shared_ptr<FrameBuffer> FrameBuffer::CreateFrameBuffer(int width, int height, std::unordered_map<std::string, TextureInfo> attachments) {
+std::shared_ptr<FrameBuffer> FrameBuffer::CreateFrameBuffer(int width, int height, std::vector<std::pair<std::string, TextureInfo>> attachments) {
     return std::make_shared<FrameBuffer>(width, height, attachments);
 }
 
-FrameBuffer::FrameBuffer(int width, int height, std::unordered_map<std::string, TextureInfo> attachments)
+FrameBuffer::FrameBuffer(int width, int height, std::vector<std::pair<std::string, TextureInfo>> attachments)
     : m_width(width),
       m_height(height) {
     glGenFramebuffers(1, &m_fbo);
@@ -39,15 +39,15 @@ FrameBuffer::FrameBuffer(int width, int height, std::unordered_map<std::string, 
         glReadBuffer(GL_NONE);
     }
 
-    glGenRenderbuffers(1, &m_rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_width, m_height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!"
-                  << std::endl;
-    }
+//    glGenRenderbuffers(1, &m_rbo);
+//    glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
+//    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_width, m_height);
+//    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo);
+//
+//    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+//        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!"
+//                  << std::endl;
+//    }
     // reset to default texture and frame buffer
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

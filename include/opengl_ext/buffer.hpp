@@ -4,6 +4,7 @@
 #include <memory>
 #include <iostream>
 #include <unordered_map>
+#include <algorithm>
 
 struct TextureInfo {
     GLenum internalFormat;
@@ -23,13 +24,13 @@ class FrameBuffer {
     std::unordered_map<std::string, GLuint> m_textures;
     std::vector<GLenum> m_drawBuffers;
 
-    static std::shared_ptr<FrameBuffer> CreateFrameBuffer(int width, int height, std::unordered_map<std::string, TextureInfo> attachments);
+    static std::shared_ptr<FrameBuffer> CreateFrameBuffer(int width, int height, std::vector<std::pair<std::string, TextureInfo>> attachments);
 
   public:
     struct Builder {
         int width;
         int height;
-        std::unordered_map<std::string, TextureInfo> attachments;
+        std::vector<std::pair<std::string, TextureInfo>> attachments;
 
         Builder(int width, int height) : width(width), height(height) {}
         Builder& SetAttachment(const std::string& name,
@@ -42,7 +43,7 @@ class FrameBuffer {
                                    {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                                    {GL_TEXTURE_MAG_FILTER, GL_LINEAR},
                                }) {
-            this->attachments[name] = {internalFormat, format, type, attachment, isDrawBuffer, params};
+            attachments.push_back({name, TextureInfo{internalFormat, format, type, attachment, isDrawBuffer, params}});
             return *this;
         }
         std::shared_ptr<FrameBuffer> Build() {
@@ -50,7 +51,7 @@ class FrameBuffer {
         }
     };
 
-    FrameBuffer(int width, int height, std::unordered_map<std::string, TextureInfo> attachments);
+    FrameBuffer(int width, int height, std::vector<std::pair<std::string, TextureInfo>> attachments);
     ~FrameBuffer();
     void bind();
     void unbind();
