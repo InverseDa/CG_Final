@@ -2,6 +2,7 @@
 #include "framework/global_env.hpp"
 #include "opengl_ext/buffer.hpp"
 #include "mgr/camera_mgr/camera_mgr.hpp"
+#include "model/quad.hpp"
 
 #include <memory>
 #include <string>
@@ -17,9 +18,11 @@ class RenderMgr {
     void Run();
 
   private:
-    std::shared_ptr<GBuffer> gbuffer;
-    std::shared_ptr<FrameBuffer> composite;
-    std::shared_ptr<ShadowBuffer> shadow;
+    std::shared_ptr<FrameBuffer> gbuffer;
+    std::shared_ptr<FrameBuffer> composite1;
+    std::shared_ptr<FrameBuffer> composite2;
+    std::shared_ptr<FrameBuffer> shadow;
+    Quad screen{};
 
     void CompositePass();
     void GBufferPass();

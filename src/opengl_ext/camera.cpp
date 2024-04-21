@@ -70,8 +70,8 @@ void Camera::processMouseMovement(GLFWwindow* window, float deltaTime) {
             if (glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED) {
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             }
-            xoffset *= 0.01f;
-            yoffset *= 0.01f;
+            xoffset *= 0.1f;
+            yoffset *= 0.1f;
 
             yaw += xoffset;
             pitch += yoffset;

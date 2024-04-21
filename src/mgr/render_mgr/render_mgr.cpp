@@ -16,9 +16,18 @@ RenderMgr::RenderMgr() {
     // 创建所有需要的Bufer
     const int width = JsonConfigLoader::Read("env/settings.json", "width");
     const int height = JsonConfigLoader::Read("env/settings.json", "height");
-    this->gbuffer = GBuffer::CreateGBuffer(width, height);
-    this->composite = FrameBuffer::CreateFrameBuffer(width, height);
-    this->shadow = ShadowBuffer::CreateShadowBuffer(width, height);
+    this->gbuffer = FrameBuffer::Builder(width, height)
+                        .SetAttachment("position", GL_RGB16F, GL_RGB, GL_FLOAT, GL_COLOR_ATTACHMENT0)
+                        .SetAttachment("normal", GL_RGB16F, GL_RGB, GL_FLOAT, GL_COLOR_ATTACHMENT1)
+                        .SetAttachment("albedoSpec", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT2)
+                        .SetAttachment("depth", GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT)
+                        .Build();
+    this->composite1 = FrameBuffer::Builder(width, height)
+                           .SetAttachment("position", GL_RGB16F, GL_RGB, GL_FLOAT, GL_COLOR_ATTACHMENT0)
+                           .SetAttachment("normal", GL_RGB16F, GL_RGB, GL_FLOAT, GL_COLOR_ATTACHMENT1)
+                           .SetAttachment("albedoSpec", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT2)
+                           .SetAttachment("depth", GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT)
+                           .Build();
 }
 
 void RenderMgr::Run() {
@@ -29,12 +38,41 @@ void RenderMgr::Run() {
 }
 
 void RenderMgr::CompositePass() {
+    //    auto ctx = Global::GetInstance();
+    //    auto cameraMgr = ctx->GetMgr<CameraMgr>();
+    //    composite1->Bind();
+    //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //    auto shader = ctx->GetMgr<AssetsMgr>()->GetShader("composite1");
+    //    shader->use();
+    //    glActiveTexture(GL_TEXTURE0);
+    //    glBindTexture(GL_TEXTURE_2D, gbuffer->getPosition());
+    //    glActiveTexture(GL_TEXTURE1);
+    //    glBindTexture(GL_TEXTURE_2D, gbuffer->getNormal());
+    //    glActiveTexture(GL_TEXTURE2);
+    //    glBindTexture(GL_TEXTURE_2D, gbuffer->getAlbedoSpec());
+    //    shader->setInt("gPosition", 0);
+    //    shader->setInt("gNormal", 1);
+    //    shader->setInt("gDiffuseSpecular", 2);
+    //    shader->setFloat("near", cameraMgr->GetNear());
+    //    shader->setFloat("far", cameraMgr->GetFar());
+    //    shader->setFloat("worldTime", static_cast<float>(glfwGetTime()));
+    //    shader->setMatrix4("view", cameraMgr->GetViewMatrix());
+    //    shader->setMatrix4("viewInverse", glm::inverse(cameraMgr->GetViewMatrix()));
+    //    shader->setMatrix4("projection", cameraMgr->GetProjectionMatrix());
+    //    shader->setMatrix4("projectionInverse", glm::inverse(cameraMgr->GetProjectionMatrix()));
+    //    //    shader->setMatrix4("lightSpaceMatrix", lightSpaceMatrix);
+    //    //    shader->setVector3("lightPos", lightPos);
+    //    //    shader->setVector3("viewPos", camera.cameraPos);
+    //    //    shader->setVector3("lightColor", lightColor);
+    //    //    shader->setVector3("lightDirection", glm::vec3(0) - lightPos);
+    //    screen.Draw(*shader);
+    //    composite1->Unbind();
 }
 
 void RenderMgr::GBufferPass() {
     auto ctx = Global::GetInstance();
     auto cameraMgr = ctx->GetMgr<CameraMgr>();
-    //    this->gbuffer->Bind();
+//    this->gbuffer->Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Terrain
     glm::mat4 model = glm::mat4(1.0f);
@@ -57,8 +95,6 @@ void RenderMgr::GBufferPass() {
     assimpShader->setMatrix4("projection", ctx->GetMgr<CameraMgr>()->GetProjectionMatrix());
     ctx->GetMgr<AssetsMgr>()->GetModel<AssimpModel>("nanosuit")->Draw(*assimpShader);
 
-    //    this->gbuffer->Unbind();
-
     // draw triangle
     const std::shared_ptr<Shader> triangleShader = ctx->GetMgr<AssetsMgr>()->GetShader("triangle");
     triangleShader->use();
@@ -66,6 +102,8 @@ void RenderMgr::GBufferPass() {
     triangleShader->setMatrix4("view", cameraMgr->GetViewMatrix());
     triangleShader->setMatrix4("projection", cameraMgr->GetProjectionMatrix());
     ctx->GetMgr<AssetsMgr>()->GetModel<Triangle>("triangle")->Draw(*triangleShader);
+
+//    this->gbuffer->Unbind();
 }
 
 void RenderMgr::LightPass() {

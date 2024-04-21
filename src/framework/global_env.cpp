@@ -1,6 +1,6 @@
 #include "framework/global_env.hpp"
 
-#include <model/water.hpp>
+#include "model/water.hpp"
 #include "model/triangle.hpp"
 
 static std::shared_ptr<Global> instance = nullptr;
@@ -58,7 +58,7 @@ void Global::InitAssets() {
     //     加载噪声图
     assetsMgr->LoadTexture("perlin_noise", "assets/textures/perlinNoise.png");
     // // 加载模型
-    //    assetsMgr->LoadModel<Cube>().Load("skybox", "assets/model/json/cube.json");
+    assetsMgr->LoadModel<Cube>().Load("skybox", "assets/model/json/cube.json");
     assetsMgr->LoadModel<AssimpModel>().Load("nanosuit", "assets/model/nanosuit/nanosuit.obj");
     assetsMgr->LoadModel<Terrain>().Load("terrain", "assets/model/json/terrain.json");
     assetsMgr->LoadModel<Water>().Load("water", "assets/model/json/water.json");

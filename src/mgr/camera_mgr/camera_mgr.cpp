@@ -13,8 +13,10 @@ std::shared_ptr<CameraMgr> CameraMgr::GetInstance(glm::vec3 position, float fov)
 CameraMgr::CameraMgr(glm::vec3 position, float fov) {
     const int width = JsonConfigLoader::Read("env/settings.json", "width");
     const int height = JsonConfigLoader::Read("env/settings.json", "height");
+    this->near = 0.1f;
+    this->far = 100000.0f;
     this->camera = Camera::CreateCamera(position, glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, fov);
-    this->projection = glm::perspective(glm::radians(fov), static_cast<float>(width) / static_cast<float>(height), 0.1f, 100000.0f);
+    this->projection = glm::perspective(glm::radians(fov), static_cast<float>(width) / static_cast<float>(height), this->near, this->far);
 }
 
 std::shared_ptr<Camera> CameraMgr::GetCamera() const {
