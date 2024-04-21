@@ -14,6 +14,7 @@ enum DIRECTION {
 
 class Camera {
   private:
+    friend class CameraMgr;
     // Camera Attributes
     glm::vec3 cameraPos;
     glm::vec3 cameraFront;
@@ -28,7 +29,7 @@ class Camera {
     bool isFirstMouse{true};
     float lastX = 0.0f;
     float lastY = 0.0f;
-    float movementSpeed = .1f;
+    float movementSpeed = 2.f;
 
   public:
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f),

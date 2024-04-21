@@ -33,7 +33,7 @@ struct Texture {
     ~Texture() = default;
 
     // getter
-    unsigned int getId() const;
+    unsigned int getId() const { return id; };
     std::string getType() const;
     std::string getPath() const;
 

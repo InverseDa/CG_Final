@@ -24,6 +24,7 @@ class RenderMgr {
     std::shared_ptr<FrameBuffer> shadow;
     Quad screen{};
 
+    std::vector<std::pair<GLenum, GLfloat>> GetDepthTextureParams();
     void CompositePass();
     void GBufferPass();
     void LightPass();

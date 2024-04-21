@@ -39,6 +39,9 @@ class AssetsMgr : public MgrBase {
         void Load(const std::string& name, const std::string& path) {
             ModelStruct<_Model>::map()[name] = std::make_shared<_Model>(path);
         }
+        void Load(const std::string& name) {
+            ModelStruct<_Model>::map()[name] = std::make_shared<_Model>();
+        }
     };
     template <typename _Model>
     ModelLoader<_Model> LoadModel() {

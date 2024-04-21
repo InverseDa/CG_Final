@@ -40,6 +40,7 @@ std::string Global::GetEnvPath(std::string name) {
 }
 
 void Global::InitAssets() {
+    glEnable(GL_DEPTH_TEST);
     auto assetsMgr = this->GetMgr<AssetsMgr>();
     // 加载着色器
     assetsMgr->LoadShader("skybox", "assets/shaders/sky.vsh", "assets/shaders/sky.fsh");
@@ -57,6 +58,7 @@ void Global::InitAssets() {
     assetsMgr->LoadShader("triangle", "assets/shaders/triangle.vsh", "assets/shaders/triangle.fsh");
     //     加载噪声图
     assetsMgr->LoadTexture("perlin_noise", "assets/textures/perlinNoise.png");
+
     // // 加载模型
     assetsMgr->LoadModel<Cube>().Load("skybox", "assets/model/json/cube.json");
     assetsMgr->LoadModel<AssimpModel>().Load("nanosuit", "assets/model/nanosuit/nanosuit.obj");

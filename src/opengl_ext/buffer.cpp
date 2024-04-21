@@ -22,10 +22,21 @@ FrameBuffer::FrameBuffer(int width, int height, std::unordered_map<std::string, 
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexImage2D(GL_TEXTURE_2D, 0, textureInfo.internalFormat, m_width, m_height, 0, textureInfo.format, textureInfo.type, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // GL_NEAREST
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // GL_NEAREST
+        for (auto& parameter : textureInfo.params) {
+            glTexParameteri(GL_TEXTURE_2D, parameter.first, parameter.second);
+        }
         glFramebufferTexture2D(GL_FRAMEBUFFER, textureInfo.attachment, GL_TEXTURE_2D, texture, 0);
         m_textures[name] = texture;
+        if (textureInfo.isDrawBuffer) {
+            m_drawBuffers.push_back(textureInfo.attachment);
+        }
+    }
+
+    if (!m_drawBuffers.empty()) {
+        glDrawBuffers(m_drawBuffers.size(), m_drawBuffers.data());
+    } else {
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
     }
 
     glGenRenderbuffers(1, &m_rbo);

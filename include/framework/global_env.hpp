@@ -19,6 +19,16 @@ class Global {
     std::unordered_map<std::string, std::string> envPaths;
 
   public:
+    // 公共全局变量
+    //// 全局光照
+    glm::vec3 lightPos = glm::vec3(3024.0f, 1000.0f, 3024.0f);
+    glm::vec3 lightColor = glm::vec3(0.95f, 1.0f, 0.86f);
+    glm::mat4 lightProjection = glm::ortho(-1000.0f, 1000.0f, -1000.0f, 1000.0f, 1.0f, 100000.0f);
+    glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f, 1000.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::mat4 lightSpaceMatrix;
+    //// 小灯光
+    glm::vec3 smallLight = glm::vec3{800.f, 100.f, 500.f};
+
     Global();
     ~Global();
     static std::shared_ptr<Global> GetInstance();

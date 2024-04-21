@@ -5,6 +5,10 @@
 
 class Cube : public Model {
   private:
+    std::vector<glm::vec3> vertices;
+    std::vector<unsigned int> indices;
+    GLuint VAO, VBO, EBO;
+
     void VerticesSetup(const std::string& jsonPath);
 
   public:

@@ -12,7 +12,7 @@ class CameraMgr {
     float far;
 
   public:
-    static std::shared_ptr<CameraMgr> GetInstance(glm::vec3 position = {0.f, 0.f, 2.5f}, float fov = 60.f);
+    static std::shared_ptr<CameraMgr> GetInstance(glm::vec3 position = {-20.f, 60.f, -20.f}, float fov = 60.f);
 
     CameraMgr(glm::vec3 position, float fov);
     ~CameraMgr() = default;
@@ -26,4 +26,5 @@ class CameraMgr {
     std::shared_ptr<Camera> GetCamera() const;
     float GetNear() const { return near; }
     float GetFar() const { return far; }
+    glm::vec3 GetCameraPosition() const { return camera->cameraPos; }
 };

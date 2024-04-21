@@ -10,8 +10,12 @@ class Terrain : public Model {
     int width;
     int height;
     int nChannels;
+    std::vector<std::pair<glm::vec3, glm::vec2>> vertices;
+    std::vector<unsigned int> indices;
+    GLuint VAO, VBO, EBO;
+
     void LoadHeightMap(const std::string& texturePath);
-    void VerticesSetup(const std::string& texturePath);
+    void VerticesSetup();
 
   public:
     Terrain() = default;
