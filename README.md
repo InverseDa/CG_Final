@@ -4,24 +4,10 @@
 
 ### Windows
 
-对于Windows用户，需要安装vcpkg：[https://vcpkg.io/en/index.html](https://vcpkg.io/en/index.html)
-
-如果你安装了scoop，可以用scoop包管理安装vcpkg：
+使用cmake构建（推荐用Visual Studio的MSVC）
 
 ```
-scoop install vcpkg
-```
-
-配置好vcpkg之后可以直接使用
-
-```
-vcpkg install glm:x64-windows glad:x64-windows glfw3:x64-windows assimp:x64-windows
-```
-
-之后使用cmake构建（推荐用Visual Studio的MSVC）
-
-```
-cmake -DCMAKE_TOOLCHAIN_FILE=<path\to\vcpkg>\scripts\buildsystems\vcpkg.cmake -B . -G "Visual Studio 17 2022" -DVCPKG_TARGET_TRIPLET=x64-windows
+cmake -B . -G "Visual Studio 17 2022" -DVCPKG_TARGET_TRIPLET=x64-windows
 ```
 
 构建完毕后打开sln文件即可
