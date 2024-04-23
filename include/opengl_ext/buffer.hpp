@@ -54,9 +54,8 @@ class FrameBuffer {
 
     FrameBuffer(int width, int height, std::vector<std::pair<std::string, TextureInfo>> attachments);
     ~FrameBuffer();
-    void bind();
-    void unbind();
-    void resize(int width, int height);
-    glm::vec2 getSize() const { return {m_width, m_height}; };
-    GLuint getTexture(std::string name) const { return m_textures.at(name); };
+    void Bind();
+    void UnBind();
+    glm::vec2 GetSize() const { return {m_width, m_height}; };
+    GLuint GetTexture(std::string name) const { return m_textures.at(name); };
 };

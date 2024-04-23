@@ -19,10 +19,6 @@ CameraMgr::CameraMgr(glm::vec3 position, float fov) {
     this->projection = glm::perspective(glm::radians(fov), static_cast<float>(width) / static_cast<float>(height), this->near, this->far);
 }
 
-std::shared_ptr<Camera> CameraMgr::GetCamera() const {
-    return this->camera;
-}
-
 void CameraMgr::ProcessKeyboardMovement(GLFWwindow* window, float deltaTime) {
     this->camera->processKeyboard(window, deltaTime);
 }
@@ -33,16 +29,4 @@ void CameraMgr::ProcessMouseMovement(GLFWwindow* window, float deltaTime) {
 
 void CameraMgr::ProcessMouseScroll(float yoffset) {
     this->camera->processMouseScroll(yoffset);
-}
-
-glm::mat4 CameraMgr::GetViewMatrix() const {
-    return this->camera->getViewMatrix();
-}
-
-glm::mat4 CameraMgr::GetProjectionMatrix() const {
-    return this->projection;
-}
-
-glm::mat4 CameraMgr::GetLightSpaceMatrix() const {
-    return this->litsrcProj;
 }

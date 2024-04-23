@@ -7,7 +7,6 @@ class CameraMgr {
   private:
     std::shared_ptr<Camera> camera;
     glm::mat4 projection;
-    glm::mat4 litsrcProj;
     float near;
     float far;
 
@@ -20,10 +19,12 @@ class CameraMgr {
     void ProcessMouseMovement(GLFWwindow* window, float deltaTime);
     void ProcessMouseScroll(float yoffset);
 
-    glm::mat4 GetViewMatrix() const;
-    glm::mat4 GetProjectionMatrix() const;
-    glm::mat4 GetLightSpaceMatrix() const;
-    std::shared_ptr<Camera> GetCamera() const;
+    glm::mat4 GetViewMatrix() const {return this->camera->getViewMatrix();}
+    glm::mat4 GetProjectionMatrix() const {return this->projection;}
+    glm::mat4 GetInverseViewMatrix() const {return this->camera->getInverseViewMatrix();}
+    glm::mat4 GetInverseProjectionMatrix() const {return glm::inverse(this->projection);}
+    glm::mat4 GetInverseViewProjectionMatrix() const {return GetInverseViewMatrix() * GetInverseProjectionMatrix();}
+    std::shared_ptr<Camera> GetCamera() const { return camera; }
     float GetNear() const { return near; }
     float GetFar() const { return far; }
     glm::vec3 GetCameraPosition() const { return camera->cameraPos; }

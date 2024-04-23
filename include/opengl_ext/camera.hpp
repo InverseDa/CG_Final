@@ -46,6 +46,7 @@ class Camera {
     void processKeyboard(GLFWwindow* window, float deltaTime);
     void processMouseMovement(GLFWwindow* window, float deltaTime);
     void processMouseScroll(float yoffset);
-    glm::mat4 getViewMatrix() const;
-    float getFov() const;
+    glm::mat4 getViewMatrix() const { return glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp); }
+    glm::mat4 getInverseViewMatrix() const { return glm::inverse(getViewMatrix()); }
+    float getFov() const { return fov; }
 };

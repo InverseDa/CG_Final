@@ -102,8 +102,3 @@ void Camera::processMouseScroll(float yoffset) {
         fov = 45.0f;
 }
 
-glm::mat4 Camera::getViewMatrix() const {
-    return glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-}
-
-float Camera::getFov() const { return fov; }

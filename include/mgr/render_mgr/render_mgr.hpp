@@ -16,6 +16,7 @@ class RenderMgr {
     static std::shared_ptr<RenderMgr> GetInstance();
 
     void Run();
+    void ResizeCallback();
 
   private:
     std::shared_ptr<FrameBuffer> gbuffer;

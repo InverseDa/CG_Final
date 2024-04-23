@@ -1,4 +1,6 @@
 #include "opengl_ext/window.hpp"
+#include "framework/global_env.hpp"
+#include "mgr/render_mgr/render_mgr.hpp"
 #include <iostream>
 
 namespace {
@@ -80,9 +82,6 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severi
     std::cout << std::endl;
     std::cout << std::endl;
 }
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
 } // namespace
 
 // Path: src/glfw.cpp
@@ -133,7 +132,14 @@ WindowWrapper::WindowWrapper(int width, int height, std::string& title, int majo
     glDebugMessageCallback(glDebugOutput, nullptr);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
     // 窗口大小改变回掉
-    glfwSetFramebufferSizeCallback(window.get(), framebuffer_size_callback);
+    this->setFramebufferSizeCallback([](GLFWwindow* window, int width, int height) {
+        auto ctx = Global::GetInstance();
+        ctx->window->setWidth(width);
+        ctx->window->setHeight(height);
+        // 对窗口大小改变进行处理
+        ctx->GetMgr<RenderMgr>()->ResizeCallback();
+        glViewport(0, 0, width, height);
+    });
 }
 
 std::shared_ptr<WindowWrapper> WindowWrapper::createWindow(int width,
@@ -176,8 +182,7 @@ void WindowWrapper::setScrollCallback(GLFWscrollfun callback) {
     glfwSetScrollCallback(window.get(), callback);
 }
 
-void WindowWrapper::setFramebufferSizeCallback(
-    GLFWframebuffersizefun callback) {
+void WindowWrapper::setFramebufferSizeCallback(GLFWframebuffersizefun callback) {
     glfwSetFramebufferSizeCallback(window.get(), callback);
 }
 
@@ -201,8 +206,7 @@ void WindowWrapper::setWindowMaximizeCallback(GLFWwindowmaximizefun callback) {
     glfwSetWindowMaximizeCallback(window.get(), callback);
 }
 
-void WindowWrapper::setWindowContentScaleCallback(
-    GLFWwindowcontentscalefun callback) {
+void WindowWrapper::setWindowContentScaleCallback(GLFWwindowcontentscalefun callback) {
     glfwSetWindowContentScaleCallback(window.get(), callback);
 }
 

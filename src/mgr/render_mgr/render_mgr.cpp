@@ -23,6 +23,17 @@ std::shared_ptr<RenderMgr> RenderMgr::GetInstance() {
 
 RenderMgr::RenderMgr() {
     // 创建所有需要的Bufer
+    this->ResizeCallback();
+}
+
+void RenderMgr::Run() {
+    this->ShadowPass();
+    this->GBufferPass();
+    this->CompositePass();
+    this->FinalPass();
+}
+
+void RenderMgr::ResizeCallback() {
     auto ctx = Global::GetInstance();
     auto width = ctx->window->getWidth();
     auto height = ctx->window->getHeight();
@@ -48,13 +59,6 @@ RenderMgr::RenderMgr() {
                            .Build();
 }
 
-void RenderMgr::Run() {
-    this->ShadowPass();
-    this->GBufferPass();
-    this->CompositePass();
-    this->FinalPass();
-}
-
 void RenderMgr::CompositePass() {
     auto ctx = Global::GetInstance();
     auto cameraMgr = ctx->GetMgr<CameraMgr>();
@@ -62,21 +66,21 @@ void RenderMgr::CompositePass() {
 
     auto shader = assetsMgr->GetShader("composite1");
 
-    composite1->bind();
+    composite1->Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shader->use();
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->getTexture("position"));
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetTexture("position"));
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->getTexture("normal"));
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetTexture("normal"));
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->getTexture("albedoSpec"));
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetTexture("albedoSpec"));
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->getTexture("depth"));
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetTexture("depth"));
     glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->getTexture("water"));
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetTexture("water"));
     glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, shadow->getTexture("shadowmap"));
+    glBindTexture(GL_TEXTURE_2D, shadow->GetTexture("shadowmap"));
     glActiveTexture(GL_TEXTURE6);
     glBindTexture(GL_TEXTURE_2D, assetsMgr->GetTexture("perlin_noise")->getId());
     shader->setInt("gPosition", 0);
@@ -99,7 +103,7 @@ void RenderMgr::CompositePass() {
     shader->setVector3("lightColor", ctx->lightColor);
     shader->setVector3("lightDirection", glm::vec3(0) - ctx->lightPos);
     screen.Draw(*shader);
-    composite1->unbind();
+    composite1->UnBind();
 }
 
 void RenderMgr::GBufferPass() {
@@ -111,7 +115,7 @@ void RenderMgr::GBufferPass() {
     auto waterShader = assetsMgr->GetShader("g_water");
     auto skyboxShader = assetsMgr->GetShader("skybox");
 
-    this->gbuffer->bind();
+    this->gbuffer->Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Terrain
     glm::mat4 model = glm::mat4(1.0f);
@@ -130,7 +134,7 @@ void RenderMgr::GBufferPass() {
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, assetsMgr->GetTexture("perlin_noise")->getId());
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, shadow->getTexture("shadowmap"));
+    glBindTexture(GL_TEXTURE_2D, shadow->GetTexture("shadowmap"));
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, assetsMgr->GetTexture("terrain_diffuse")->getId());
     model = glm::translate(glm::mat4(1.0f), glm::vec3(-1024.0, 0.00000001f, -1024.0f));
@@ -157,7 +161,7 @@ void RenderMgr::GBufferPass() {
     skyboxShader->setMatrix4("projection", cameraMgr->GetProjectionMatrix());
     skyboxShader->setInt("skyBox", 0);
     assetsMgr->GetModel<Cube>("skybox")->Draw(*skyboxShader);
-    this->gbuffer->unbind();
+    this->gbuffer->UnBind();
 }
 
 void RenderMgr::FinalPass() {
@@ -170,15 +174,15 @@ void RenderMgr::FinalPass() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shader->use();
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, composite1->getTexture("position"));
+    glBindTexture(GL_TEXTURE_2D, composite1->GetTexture("position"));
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, composite1->getTexture("albedoSpec"));
+    glBindTexture(GL_TEXTURE_2D, composite1->GetTexture("albedoSpec"));
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->getTexture("depth"));
+    glBindTexture(GL_TEXTURE_2D, gbuffer->GetTexture("depth"));
     glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, composite1->getTexture("water"));
+    glBindTexture(GL_TEXTURE_2D, composite1->GetTexture("water"));
     glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, composite1->getTexture("normal"));
+    glBindTexture(GL_TEXTURE_2D, composite1->GetTexture("normal"));
     glActiveTexture(GL_TEXTURE6);
     glBindTexture(GL_TEXTURE_2D, assetsMgr->GetTexture("perlin_noise")->getId());
     shader->setInt("Position", 1);
@@ -191,10 +195,10 @@ void RenderMgr::FinalPass() {
     shader->setFloat("far", cameraMgr->GetFar());
     shader->setFloat("worldTime", static_cast<float>(glfwGetTime()));
     shader->setMatrix4("view", cameraMgr->GetViewMatrix());
-    shader->setMatrix4("inverseV", glm::inverse(cameraMgr->GetViewMatrix()));
+    shader->setMatrix4("inverseV", cameraMgr->GetInverseViewMatrix());
     shader->setMatrix4("projection", cameraMgr->GetProjectionMatrix());
-    shader->setMatrix4("inverseP", glm::inverse(cameraMgr->GetProjectionMatrix()));
-    shader->setMatrix4("inverseVP", glm::inverse(cameraMgr->GetProjectionMatrix() * cameraMgr->GetViewMatrix()));
+    shader->setMatrix4("inverseP", cameraMgr->GetInverseProjectionMatrix());
+    shader->setMatrix4("inverseVP", cameraMgr->GetInverseViewProjectionMatrix());
     shader->setMatrix4("lightSpaceMatrix", ctx->lightSpaceMatrix);
     shader->setVector3("lightPos", ctx->lightPos);
     shader->setVector3("viewPos", cameraMgr->GetCameraPosition());
@@ -218,11 +222,11 @@ void RenderMgr::ShadowPass() {
     shader->use();
     shader->setMatrix4("lightSpaceMatrix", ctx->lightSpaceMatrix);
 
-    this->shadow->bind();
+    this->shadow->Bind();
     glClear(GL_DEPTH_BUFFER_BIT);
     glCullFace(GL_FRONT);
     shader->setMatrix4("model", glm::mat4(1.0f));
     ctx->GetMgr<AssetsMgr>()->GetModel<Terrain>("terrain")->Draw(*shader);
     glCullFace(GL_BACK);
-    this->shadow->unbind();
+    this->shadow->UnBind();
 }

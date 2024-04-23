@@ -39,15 +39,15 @@ FrameBuffer::FrameBuffer(int width, int height, std::vector<std::pair<std::strin
         glReadBuffer(GL_NONE);
     }
 
-//    glGenRenderbuffers(1, &m_rbo);
-//    glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
-//    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_width, m_height);
-//    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo);
-//
-//    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-//        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!"
-//                  << std::endl;
-//    }
+    //    glGenRenderbuffers(1, &m_rbo);
+    //    glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
+    //    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_width, m_height);
+    //    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo);
+    //
+    //    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    //        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!"
+    //                  << std::endl;
+    //    }
     // reset to default texture and frame buffer
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -61,26 +61,11 @@ FrameBuffer::~FrameBuffer() {
     }
 }
 
-void FrameBuffer::bind() {
+void FrameBuffer::Bind() {
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
     glViewport(0, 0, m_width, m_height);
 }
 
-void FrameBuffer::unbind() {
+void FrameBuffer::UnBind() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void FrameBuffer::resize(int width, int height) {
-    m_width = width;
-    m_height = height;
-
-    for (auto& texture : m_textures) {
-        glBindTexture(GL_TEXTURE_2D, texture.second);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, m_width, m_height, 0, GL_RGB, GL_FLOAT, nullptr);
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_width, m_height);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
