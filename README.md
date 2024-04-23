@@ -1,27 +1,18 @@
 # CG_Final : 2020级计算机图形学期末大作业
 
+## 分支介绍
+
+- main：此分支为重构后的版本
+- old：原先的版本，不推荐使用，留档用
+
 ## 构建
 
 ### Windows
 
-对于Windows用户，需要安装vcpkg：[https://vcpkg.io/en/index.html](https://vcpkg.io/en/index.html)
+使用cmake构建：
 
-如果你安装了scoop，可以用scoop包管理安装vcpkg：
-
-```
-scoop install vcpkg
-```
-
-配置好vcpkg之后可以直接使用
-
-```
-vcpkg install glm:x64-windows glad:x64-windows glfw3:x64-windows assimp:x64-windows
-```
-
-之后使用cmake构建（推荐用Visual Studio的MSVC）
-
-```
-cmake -DCMAKE_TOOLCHAIN_FILE=<path\to\vcpkg>\scripts\buildsystems\vcpkg.cmake -B . -G "Visual Studio 17 2022" -DVCPKG_TARGET_TRIPLET=x64-windows
+```bash
+cmake -B .
 ```
 
 构建完毕后打开sln文件即可
@@ -30,19 +21,19 @@ cmake -DCMAKE_TOOLCHAIN_FILE=<path\to\vcpkg>\scripts\buildsystems\vcpkg.cmake -B
 
 对于Arch Linux用户，需要用pacman安装glfw和assimp
 
-```
+```bash
 sudo pacman -S glfw assimp
 ```
 
 安装后在项目根目录下使用
 
-```
+```bash
 cmake -B .; make
 ```
 
 接下来将可执行文件设为可启动
 
-```
+```bash
 sudo chmod +x CG_Final
 ```
 
@@ -51,21 +42,37 @@ sudo chmod +x CG_Final
 ### Fedora
 
 对于Fedora用户，需要用dnf安装以下四个包
-```
+```bash
 sudo dnf -y install glfw glfw-devel assimp assimp-devel
 ```
 
 安装后在项目根目录下使用
 
-```
+```bash
 cmake -B .; make
 ```
 
 接下来将可执行文件设为可启动
 
-```
+```bash
 sudo chmod +x CG_Final
 ```
+
+## MacOS
+
+安装后在项目根目录下使用
+
+```bash
+cmake -B .; make
+```
+
+接下来将可执行文件设为可启动
+
+```bash
+sudo chmod +x CG_Final
+```
+
+最后执行即可。
 
 ## 技术细节
 
@@ -109,76 +116,64 @@ sudo chmod +x CG_Final
 └── sky.vsh
 ```
 
-为了实现这个技术，我们需要用到OpenGL中比较强大的帧缓冲（Frame Buffer）来实现G-Buffer，这个帧缓冲将输出四张贴图。
+为了实现这个技术，我们需要用到OpenGL中帧缓冲（FrameBuffer）来实现G-Buffer，这个帧缓冲将输出四张贴图。
 
 ```cpp
 class FrameBuffer {
-public:
-    GLuint fbo, rbo;
-    // 四张贴图分别是位置贴图（其实这是最不需要的，因为可以用深度图重建坐标
-    // 法线贴图
-    // 漫反射贴图（A通道为高光强度）
-    // 0: Position; 1: Normal; 2: Diffuse + specular
-    GLuint Position, Normal, DiffuseSpecular, DepthTex;
-    GLuint DrawBuffers[3];
+  protected:
+    int m_width;
+    int m_height;
+    GLuint m_fbo;
+    GLuint m_rbo;
+    std::unordered_map<std::string, GLuint> m_textures;
+    std::vector<GLenum> m_drawBuffers;
 
-    bool init(unsigned int WINDOW_WIDTH, unsigned int WINDOW_HEIGHT) {
-        // create fbo
-        glGenFramebuffers(1, &fbo);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-        // create gbuffer texture
-        glGenTextures(1, &Position);
-        glBindTexture(GL_TEXTURE_2D, Position);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, Position, 0);
-        // normal color buffer
-        glGenTextures(1, &Normal);
-        glBindTexture(GL_TEXTURE_2D, Normal);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, Normal, 0);
-        // color + specular color buffer
-        glGenTextures(1, &DiffuseSpecular);
-        glBindTexture(GL_TEXTURE_2D, DiffuseSpecular);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, DiffuseSpecular, 0);
+    static std::shared_ptr<FrameBuffer> CreateFrameBuffer(int width, int height, std::vector<std::pair<std::string, TextureInfo>> attachments);
 
-        // depth color buffer
-        glGenTextures(1, &DepthTex);
-        glBindTexture(GL_TEXTURE_2D, DepthTex);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
-                     NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, DepthTex, 0);
+  public:
+    struct Builder {
+        int width;
+        int height;
+        std::vector<std::pair<std::string, TextureInfo>> attachments;
 
-        DrawBuffers[0] = GL_COLOR_ATTACHMENT0;
-        DrawBuffers[1] = GL_COLOR_ATTACHMENT1;
-        DrawBuffers[2] = GL_COLOR_ATTACHMENT2;
-        glDrawBuffers(3, DrawBuffers);
+        Builder(int width, int height) : width(width), height(height) {}
+        Builder& SetAttachment(const std::string& name,
+                               GLenum internalFormat,
+                               GLenum format,
+                               GLenum type,
+                               GLenum attachment,
+                               bool isDrawBuffer = true,
+                               std::vector<std::pair<GLenum, GLfloat>> params = {
+                                   {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+                                   {GL_TEXTURE_MAG_FILTER, GL_LINEAR},
+                               }) {
+            attachments.push_back({name, TextureInfo{internalFormat, format, type, attachment, isDrawBuffer, params}});
+            return *this;
+        }
+        std::shared_ptr<FrameBuffer> Build() {
+            return FrameBuffer::CreateFrameBuffer(width, height, attachments);
+        }
+    };
 
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        return true;
-    }
+    FrameBuffer(int width, int height, std::vector<std::pair<std::string, TextureInfo>> attachments);
+    ~FrameBuffer();
+    void Bind();
+    void UnBind();
+    glm::vec2 GetSize() const { return {m_width, m_height}; };
+    GLuint GetTexture(std::string name) const { return m_textures.at(name); };
 };
 ```
 
 这样就创建了一个帧缓冲类，可以利用这个类创建一个G-Buffer。
 
+```cpp
+auto gbuffer = FrameBuffer::Builder(width, height)
+                        .SetAttachment("position", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0)
+                        .SetAttachment("normal", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT1)
+                        .SetAttachment("albedoSpec", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT2)
+                        .SetAttachment("depth", GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, false, GetDepthTextureParams())
+                        .Build();
 ```
-FrameBuffer* gbuffer;
-// 窗口的长和宽，注意如果是APPLE的视网膜屏幕，需要将数值乘以2
-gbuffer->init(SCR_WIDTH, SCR_HEIGHT);
-```
-
-因为我们采用的是指针开辟内存，所以用完需要回收内存空间。
 
 ### 2. 基于CPU计算和高度图的地形生成算法
 
@@ -247,21 +242,7 @@ gbuffer->init(SCR_WIDTH, SCR_HEIGHT);
 绘制方式如下：
 
 ```cpp
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, terrainTextureID);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, terrainSpecular);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, terrainNormal);
-        terrainShader->use();
-        terrainShader->set4Matrix("model", model);
-        terrainShader->set4Matrix("view", view);
-        terrainShader->set4Matrix("projection", projection);
-        terrainShader->setInt("tex", 0);
-        terrainShader->setInt("specular", 1);
-        terrainShader->setInt("normal", 2);
-        // draw mesh
-        glBindVertexArray(terrainVAO);
+		glBindVertexArray(terrainVAO);
         // render the mesh triangle strip by triangle strip - each row at a time
         for (unsigned int strip = 0; strip < height - 1; ++strip) {
             glDrawElements(GL_TRIANGLE_STRIP, // primitive type
@@ -364,33 +345,9 @@ void main() {
 定义一个专门渲染阴影的帧缓冲，然后先以光源为视角渲染出一张灰度的深度贴图。给阴影上色的时候先判断当前深度和深度图的深度大小，如果小的话说明需要上阴影，于是涂黑。这是最基础的阴影映射部分，为此我们先定义一个阴影映射所使用的帧缓冲：
 
 ```cpp
-void initDepthMap() {
-    // shadow
-    glGenFramebuffers(1, &shadowMapFBO);
-    // create depth texture
-    glGenTextures(1, &shadowMap);
-    glBindTexture(GL_TEXTURE_2D, shadowMap);
-    glTexImage2D(GL_TEXTURE_2D,
-                 0,
-                 GL_DEPTH_COMPONENT,
-                 SHADOW_WIDTH,
-                 SHADOW_HEIGHT,
-                 0,
-                 GL_DEPTH_COMPONENT,
-                 GL_FLOAT,
-                 NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    // attach depth texture as FBO's depth buffer
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
+auto shadow = FrameBuffer::Builder(shadowWidth, shadowHeight)
+                       .SetAttachment("shadowmap", GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, false, GetDepthTextureParams())
+                       .Build();
 ```
 
 其中shadowMapFBO是阴影映射时所用到的帧缓冲，我们以光源为视角，作向量$\vec{v}=\vec{0}-\vec{sun}$，以$\vec{v}/|\vec{v}|$ 为光源视角，绘制ShadowMap（或者说Depth Map)。
@@ -398,26 +355,21 @@ void initDepthMap() {
 在绘制的时候，我们应当启用深度检测，因为我们需要生成一张带有深度信息的深度图，具体绘制代码如下：
 
 ```cpp
-void renderDepthMap() {
-    glEnable(GL_DEPTH_TEST);
-    lightProjection = glm::ortho(-1000.0f, 1000.0f, -1000.0f, 1000.0f, 1.0f, 100000.0f);
-    //    lightProjection = glm::perspective(glm::radians(camera.fov),
-    //    WINDOW_WIDTH * 1.0f / WINDOW_HEIGHT, 0.1f, 100000.0f);
-    lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-    lightSpaceMatrix = lightProjection * lightView;
-    shadowShader->use();
-    shadowShader->set4Matrix("lightSpaceMatrix", lightSpaceMatrix);
+void RenderMgr::ShadowPass() {
+    auto ctx = Global::GetInstance();
+    auto shader = ctx->GetMgr<AssetsMgr>()->GetShader("shadow");
+    ctx->lightView = glm::lookAt(ctx->lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+    ctx->lightSpaceMatrix = ctx->lightProjection * ctx->lightView;
+    shader->use();
+    shader->setMatrix4("lightSpaceMatrix", ctx->lightSpaceMatrix);
 
-    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
+    this->shadow->Bind();
     glClear(GL_DEPTH_BUFFER_BIT);
     glCullFace(GL_FRONT);
-    displayTerrain(RENDER_SHADOW);
-    displayTree(RENDER_SHADOW);
-    displayNano(RENDER_SHADOW);
-    displayRobot(RENDER_SHADOW);
+    shader->setMatrix4("model", glm::mat4(1.0f));
+    ctx->GetMgr<AssetsMgr>()->GetModel<Terrain>("terrain")->Draw(*shader);
     glCullFace(GL_BACK);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    this->shadow->UnBind();
 }
 ```
 
@@ -508,47 +460,48 @@ float ShadowCalculation(vec4 fragPos) {
 环境贴图用于构建天空盒，这样可以极大的提高场景的美观。需要注意的是，环境贴图最好是静态的，另外我们希望天空是“触不可及”的，所以需要去除位移因素，使得天空永远相对于人不动。
 
 ```cpp
-void initSkyBox() {
-    std::vector<std::string> faces{"textures/skybox/right.jpg",
-                                   "textures/skybox/left.jpg",
-                                   "textures/skybox/top.jpg",
-                                   "textures/skybox/bottom.jpg",
-                                   "textures/skybox/front.jpg",
-                                   "textures/skybox/back.jpg"};
-    float skyBoxVertices[] = {
-        // positions
-        -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f,
-        1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
+void Cube::VerticesSetup(const std::string& jsonPath) {
+    this->vertices = {
+        glm::vec3(-1.0f, 1.0f, 1.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        glm::vec3(1.0f, -1.0f, 1.0f),
+        glm::vec3(-1.0f, -1.0f, 1.0f),
+        glm::vec3(-1.0f, 1.0f, -1.0f),
+        glm::vec3(1.0f, 1.0f, -1.0f),
+        glm::vec3(1.0f, -1.0f, -1.0f),
+        glm::vec3(-1.0f, -1.0f, -1.0f)
+    };
+   this->indices = {
+        0, 1, 2,
+        0, 2, 3,
+        1, 5, 6,
+        1, 6, 2,
+        5, 4, 7,
+        5, 7, 6,
+        4, 0, 3,
+        4, 3, 7,
+        4, 5, 1,
+        4, 1, 0,
+        3, 2, 6,
+        3, 6, 7
+    };
+    glGenVertexArrays(1, &this->VAO);
+    glGenBuffers(1, &this->VBO);
+    glGenBuffers(1, &this->EBO);
 
-        -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f,
-        -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,
+    glBindVertexArray(this->VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
 
-        1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f,
+    glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(glm::vec3), this->vertices.data(), GL_STATIC_DRAW);
 
-        -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,
-
-        -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f,
-
-        -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f,
-        1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f
-        };
-
-    glGenVertexArrays(1, &skyBoxVAO);
-    glBindVertexArray(skyBoxVAO);
-    glGenBuffers(1, &skyBoxVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, skyBoxVBO);
-    glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(skyBoxVertices),
-                 &skyBoxVertices,
-                 GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(
-        0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(nullptr));
 
-    skyBoxTextureID = loadSkyBox(faces);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(unsigned int), this->indices.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 ```
 
@@ -591,42 +544,46 @@ unsigned int loadSkyBox(std::vector<std::string> &faces) {
 对于细分部分，我们由下面的代码可以解决：
 
 ```cpp
-const int WATER_VERTICES_HEIGHT_AND_WIDTH = 410;
+void Water::VerticesSetup() {
+    std::pair<int, int> textureCoords[] = {{0, 0}, {1, 0}};
+    int textureIndex = 0;
 
-...
+    for (int i = 0; i < this->width - 1; i++) {
+        for (int j = 0; j < this->height - 1; j++) {
+            int index = i * this->width + j;
+            glm::vec3 position = glm::vec3(static_cast<float>(i), 0.0f, static_cast<float>(j));
+            glm::vec2 texcoords = glm::vec2(static_cast<float>(textureCoords[textureIndex].first),
+                                            static_cast<float>(textureCoords[textureIndex].second));
+            this->vertices.push_back({position, texcoords});
+            textureIndex = (textureIndex + 1) % 2;
 
-void loadWater() {
-    const float planeHeight = 0.0f;
-
-    //  细分水平面，切割
-    std::pair<int, int> hashMap1[] = {{0, 0}, {1, 0}};
-    std::pair<int, int> hashMap2[] = {{0, 1}, {1, 1}};
-    int k = 0, index;
-    for (int i = 0; i < WATER_VERTICES_HEIGHT_AND_WIDTH; i++) {
-        for (int j = 0; j < WATER_VERTICES_HEIGHT_AND_WIDTH; j++, k++) {
-            waterVertices.push_back(static_cast<float>(i));
-            waterVertices.push_back(planeHeight);
-            waterVertices.push_back(static_cast<float>(j));
-            if (i % 2 == 0) {
-                waterVertices.push_back(static_cast<float>(hashMap1[k % 2].first));
-                waterVertices.push_back(static_cast<float>(hashMap1[k % 2].second));
-            } else {
-                waterVertices.push_back(static_cast<float>(hashMap2[k % 2].first));
-                waterVertices.push_back(static_cast<float>(hashMap2[k % 2].second));
-            }
+            this->indices.push_back(index);
+            this->indices.push_back(index + 1);
+            this->indices.push_back((i + 1) * this->width + j);
+            this->indices.push_back(index + 1);
+            this->indices.push_back((i + 1) * this->width + j);
+            this->indices.push_back((i + 1) * this->width + j + 1);
         }
     }
-    for (int i = 0; i < WATER_VERTICES_HEIGHT_AND_WIDTH - 1; i++) {
-        for (int j = 0; j < WATER_VERTICES_HEIGHT_AND_WIDTH - 1; j++) {
-            index = i * WATER_VERTICES_HEIGHT_AND_WIDTH + j;
-            waterIndices.push_back(index);
-            waterIndices.push_back(index + 1);
-            waterIndices.push_back((i + 1) * WATER_VERTICES_HEIGHT_AND_WIDTH + j);
-            waterIndices.push_back(index + 1);
-            waterIndices.push_back((i + 1) * WATER_VERTICES_HEIGHT_AND_WIDTH + j);
-            waterIndices.push_back((i + 1) * WATER_VERTICES_HEIGHT_AND_WIDTH + j + 1);
-        }
-    }
+    // vao
+    glGenVertexArrays(1, &this->VAO);
+    glBindVertexArray(this->VAO);
+    // vbo
+    glGenBuffers(1, &this->VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+    glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(std::pair<glm::vec3, glm::vec2>), this->vertices.data(), GL_STATIC_DRAW);
+    // attributes
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(std::pair<glm::vec3, glm::vec2>), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(std::pair<glm::vec3, glm::vec2>), (void*)sizeof(glm::vec3));
+    glEnableVertexAttribArray(1);
+    // ebo
+    glGenBuffers(1, &this->EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(unsigned int), this->indices.data(), GL_STATIC_DRAW);
+    // unbind
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 ```
 
