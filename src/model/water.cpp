@@ -10,27 +10,18 @@ Water::Water(const std::string& jsonPath) {
 }
 
 void Water::VerticesSetup(const std::string& texturePath) {
-    //  细分水平面，切割
-    std::pair<int, int> hashMap1[] = {{0, 0}, {1, 0}};
-    std::pair<int, int> hashMap2[] = {{0, 1}, {1, 1}};
-    int k = 0, index;
+    std::pair<int, int> textureCoords[] = {{0, 0}, {1, 0}};
+    int textureIndex = 0;
 
-    for (int i = 0; i < this->width; i++) {
-        for (int j = 0; j < this->height; j++, k++) {
-            glm::vec3 position = glm::vec3(static_cast<float>(i), 0.0f, static_cast<float>(j));
-            glm::vec2 texcoords;
-            if (i % 2 == 0)
-                texcoords = glm::vec2(static_cast<float>(hashMap1[k % 2].first),
-                                      static_cast<float>(hashMap1[k % 2].second));
-            else
-                texcoords = glm::vec2(static_cast<float>(hashMap2[k % 2].first),
-                                      static_cast<float>(hashMap2[k % 2].second));
-            this->vertices.push_back({position, texcoords});
-        }
-    }
     for (int i = 0; i < this->width - 1; i++) {
         for (int j = 0; j < this->height - 1; j++) {
-            index = i * this->width + j;
+            int index = i * this->width + j;
+            glm::vec3 position = glm::vec3(static_cast<float>(i), 0.0f, static_cast<float>(j));
+            glm::vec2 texcoords = glm::vec2(static_cast<float>(textureCoords[textureIndex].first),
+                                            static_cast<float>(textureCoords[textureIndex].second));
+            this->vertices.push_back({position, texcoords});
+            textureIndex = (textureIndex + 1) % 2;
+
             this->indices.push_back(index);
             this->indices.push_back(index + 1);
             this->indices.push_back((i + 1) * this->width + j);
