@@ -46,7 +46,7 @@ void Engine::Render() {
     Global::GetInstance()->GetMgr<RenderMgr>()->Run();
 }
 
-void Engine::SetDefaultColor(){
+void Engine::SetDefaultColor() {
     // 设置默认清屏颜色
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
