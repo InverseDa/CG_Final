@@ -17,6 +17,7 @@ void Terrain::LoadHeightMap(const std::string& texturePath) {
     std::string diffusePath = JsonConfigLoader::Read(texturePath, "diffuse_path");
     std::string specularPath = JsonConfigLoader::Read(texturePath, "specular_path");
     std::string normalPath = JsonConfigLoader::Read(texturePath, "normal_path");
+    auto assetsMgr = Global::GetInstance()->GetMgr<AssetsMgr>();
 
     int dwidth, dheight, dn;
     unsigned char* heightMap = stbi_load(heightMapPath.c_str(), &this->width, &this->height, &this->nChannels, 0);
@@ -26,13 +27,13 @@ void Terrain::LoadHeightMap(const std::string& texturePath) {
         exit(0);
     }
 
-    Global::GetInstance()->GetMgr<AssetsMgr>()->LoadTexture("terrain_diffuse", diffusePath, TextureType::DIFFUSE);
-    Global::GetInstance()->GetMgr<AssetsMgr>()->LoadTexture("terrain_specular", specularPath, TextureType::SPECULAR);
-    Global::GetInstance()->GetMgr<AssetsMgr>()->LoadTexture("terrain_normal", normalPath, TextureType::NORMAL);
+    assetsMgr->LoadTexture("terrain_diffuse", diffusePath, TextureType::DIFFUSE);
+    assetsMgr->LoadTexture("terrain_specular", specularPath, TextureType::SPECULAR);
+    assetsMgr->LoadTexture("terrain_normal", normalPath, TextureType::NORMAL);
 
-    this->textures.push_back(*Global::GetInstance()->GetMgr<AssetsMgr>()->GetTexture("terrain_diffuse").get());
-    this->textures.push_back(*Global::GetInstance()->GetMgr<AssetsMgr>()->GetTexture("terrain_specular").get());
-    this->textures.push_back(*Global::GetInstance()->GetMgr<AssetsMgr>()->GetTexture("terrain_normal").get());
+    this->textures.push_back(*assetsMgr->GetTexture("terrain_diffuse"));
+    this->textures.push_back(*assetsMgr->GetTexture("terrain_specular"));
+    this->textures.push_back(*assetsMgr->GetTexture("terrain_normal"));
 
     float yScale = 256.0f / 256.0f, yShift = 16.0f;
     for (unsigned int i = 0; i < this->height; i++) {
