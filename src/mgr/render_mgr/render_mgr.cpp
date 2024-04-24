@@ -41,7 +41,7 @@ void RenderMgr::ResizeCallback() {
     auto shadowHeight = 1024;
 
     this->shadow = FrameBuffer::Builder(shadowWidth, shadowHeight)
-                       .SetAttachment("shadowmap", GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, false, GetDepthTextureParams())
+                       .SetAttachment("shadowmap", GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, READ_BUFFER_FLAG, GetDepthTextureParams())
                        .Build();
     this->gbuffer = FrameBuffer::Builder(width, height)
                         .SetAttachment("position", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0, DRAW_BUFFER_FLAG)
@@ -55,7 +55,7 @@ void RenderMgr::ResizeCallback() {
                            .SetAttachment("normal", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT1, DRAW_BUFFER_FLAG)
                            .SetAttachment("albedoSpec", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT2, DRAW_BUFFER_FLAG)
                            .SetAttachment("water", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT3, DRAW_BUFFER_FLAG)
-                           .SetAttachment("depth", GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, false, GetDepthTextureParams())
+                           .SetAttachment("depth", GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, READ_BUFFER_FLAG, GetDepthTextureParams())
                            .Build();
 }
 
