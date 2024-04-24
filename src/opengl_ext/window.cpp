@@ -125,12 +125,14 @@ WindowWrapper::WindowWrapper(int width, int height, std::string& title, int majo
         glfwTerminate();
         throw std::runtime_error("Failed to initialize GLAD.");
     }
+#ifndef __APPLE__
     // 注册类似Vulkan的Validation回掉
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(glDebugOutput, nullptr);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+#endif
     // 窗口大小改变回掉
     this->setFramebufferSizeCallback([](GLFWwindow* window, int width, int height) {
         auto ctx = Global::GetInstance();

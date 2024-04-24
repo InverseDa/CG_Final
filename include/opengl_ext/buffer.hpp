@@ -6,6 +6,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <algorithm>
+#include <vector>
 
 constexpr bool DRAW_BUFFER_FLAG = true;
 constexpr bool READ_BUFFER_FLAG = false;

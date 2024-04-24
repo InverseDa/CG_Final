@@ -205,8 +205,8 @@ void RenderMgr::FinalPass() {
     shader->setVector3("lightColor", ctx->lightColor);
     shader->setVector3("lightDirection", glm::vec3(0) - ctx->lightPos);
 #ifdef __APPLE__
-    shader2->setInt("SCR_WIDTH", ctx->window->getWidth() * 2);
-    shader2->setInt("SCR_HEIGHT", ctx->window->getHeight() * 2);
+    shader->setInt("SCR_WIDTH", ctx->window->getWidth() * 2);
+    shader->setInt("SCR_HEIGHT", ctx->window->getHeight() * 2);
 #else
     shader->setInt("SCR_WIDTH", ctx->window->getWidth());
     shader->setInt("SCR_HEIGHT", ctx->window->getHeight());
