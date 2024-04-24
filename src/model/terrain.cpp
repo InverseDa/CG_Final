@@ -23,10 +23,10 @@ void Terrain::LoadHeightMap(const std::string& texturePath) {
     assetsMgr->LoadTexture("terrain_diffuse", diffusePath, TextureType::DIFFUSE);
     assetsMgr->LoadTexture("terrain_specular", specularPath, TextureType::SPECULAR);
     assetsMgr->LoadTexture("terrain_normal", normalPath, TextureType::NORMAL);
-    assetsMgr->LoadTexture("terrian_height", heightMapPath, TextureType::HEIGHT);
+    assetsMgr->LoadTexture("terrain_height", heightMapPath, TextureType::HEIGHT);
 
-    this->width = assetsMgr->GetTexture("terrian_height")->getWidth();
-    this->height = assetsMgr->GetTexture("terrian_height")->getHeight();
+    this->width = assetsMgr->GetTexture("terrain_height")->getWidth();
+    this->height = assetsMgr->GetTexture("terrain_height")->getHeight();
 
     this->textures.push_back(*assetsMgr->GetTexture("terrain_diffuse"));
     this->textures.push_back(*assetsMgr->GetTexture("terrain_specular"));
