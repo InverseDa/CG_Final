@@ -11,6 +11,13 @@
 #include <sstream>
 #include <string>
 
+enum ShaderType {
+    basic, // vertex, fragment
+    compute,
+    geometry,
+    tessellation,
+};
+
 class Shader {
   private:
     unsigned int id;
@@ -18,23 +25,19 @@ class Shader {
   public:
     Shader(const std::string& vertexShaderPath,
            const std::string& fragmentShaderPath);
-
-    Shader(const std::string& glslPath);
-
     Shader(const char* vertexShaderCode, const char* fragmentShaderCode);
+    Shader(const std::string& computeShaderPath);
 
     ~Shader();
 
     static std::shared_ptr<Shader>
     createShaderByPath(const std::string& vertexShaderPath,
                        const std::string& fragmentShaderPath);
-
-    static std::shared_ptr<Shader>
-    createShaderByPath(const std::string& glslPath);
-
     static std::shared_ptr<Shader>
     createShaderBySource(const char* vertexShaderCode,
                          const char* fragmentShaderCode);
+    static std::shared_ptr<Shader>
+    createComputeShaderByPath(const std::string& computeShaderPath);
 
     void use() const;
 

@@ -7,23 +7,20 @@ Shader::createShaderByPath(const std::string& vertexShaderPath,
 }
 
 std::shared_ptr<Shader>
-Shader::createShaderByPath(const std::string& glslPath) {
-    return std::make_shared<Shader>(glslPath);
-}
-
-std::shared_ptr<Shader>
 Shader::createShaderBySource(const char* vertexShaderCode,
                              const char* fragmentShaderCode) {
     return std::make_shared<Shader>(vertexShaderCode, fragmentShaderCode);
 }
 
+std::shared_ptr<Shader> Shader::createComputeShaderByPath(const std::string& computeShaderPath) {
+    return std::make_shared<Shader>(computeShaderPath);
+}
+
 Shader::Shader(const std::string& vertexShaderPath,
                const std::string& fragmentShaderPath) {
     // Read shader source code
-    std::string vshAbsolutePath =
-        std::filesystem::absolute(vertexShaderPath).string();
-    std::string fshAbsolutePath =
-        std::filesystem::absolute(fragmentShaderPath).string();
+    std::string vshAbsolutePath = std::filesystem::absolute(vertexShaderPath).string();
+    std::string fshAbsolutePath = std::filesystem::absolute(fragmentShaderPath).string();
 
     std::string vertexCode;
     std::string fragmentCode;
@@ -144,8 +141,60 @@ Shader::Shader(const char* vertexShaderCode, const char* fragmentShaderCode) {
     glDeleteShader(fragment);
 }
 
-// TODO: implement this constructor
-Shader::Shader(const std::string& glslPath) {
+Shader::Shader(const std::string& computeShaderPath) {
+    // Read shader source code
+    std::string cshAbsolutePath = std::filesystem::absolute(computeShaderPath).string();
+
+    std::string computeCode;
+    std::ifstream cShaderFile;
+
+    cShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    try {
+        // Open files
+        cShaderFile.open(cshAbsolutePath);
+        std::stringstream cShaderStream;
+        // Load file's buffer contents into streams
+        cShaderStream << cShaderFile.rdbuf();
+        // Close file handlers
+        cShaderFile.close();
+        // to string
+        computeCode = cShaderStream.str();
+    } catch (std::ifstream::failure e) {
+        throw std::runtime_error("Failed to read shader file.");
+    }
+
+    const char* cShaderCode = computeCode.c_str();
+
+    // Compile shaders
+    unsigned int compute;
+    int success;
+    char infoLog[512];
+    // Compute shader
+    compute = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(compute, 1, &cShaderCode, nullptr);
+    glCompileShader(compute);
+    // Print compile errors if any
+    glGetShaderiv(compute, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(compute, 512, nullptr, infoLog);
+        std::cout << "ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n"
+                  << infoLog << std::endl;
+    }
+
+    // Link shader
+    id = glCreateProgram();
+    glAttachShader(id, compute);
+    glLinkProgram(id);
+    // Print link errors if any
+    glGetProgramiv(id, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(id, 512, nullptr, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
+                  << infoLog << std::endl;
+    }
+
+    // Delete Shader
+    glDeleteShader(compute);
 }
 
 Shader::~Shader() { glDeleteProgram(id); }
@@ -197,3 +246,4 @@ void Shader::setMatrix3(const std::string& name, glm::mat3 mat3) const {
 void Shader::setMatrix4(const std::string& name, glm::mat4 mat4) const {
     glUniformMatrix4fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat4));
 }
+
