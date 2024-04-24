@@ -45,7 +45,7 @@ class WindowWrapper {
     createWindow(int width = 800,
                  int height = 600,
                  std::string&& title = "GLFW Window",
-                 int major_version = 3,
+                 int major_version = 4,
                  int minor_version = 3,
                  Type type = CORE);
     // Get the raw pointer to the GLFWwindow

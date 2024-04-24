@@ -26,7 +26,7 @@ unsigned int Texture::LoadTexture(const std::string& path) {
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
-    int width, height, nrComponents;
+    int nrComponents;
     unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
     if (data) {
         GLenum format;
@@ -62,7 +62,7 @@ unsigned int Texture::LoadSkyBoxTexture(std::vector<std::string>& faces) {
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
-    int width, height, nrComponents;
+    int nrComponents;
     for (unsigned int i = 0; i < faces.size(); i++) {
         unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrComponents, 0);
         if (data) {

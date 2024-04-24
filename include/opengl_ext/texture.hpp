@@ -24,6 +24,8 @@ struct Texture {
     unsigned int id;
     TextureType type;
     std::string path;
+    int width;
+    int height;
 
     Texture() = default;
     Texture(const unsigned int& id);
@@ -36,6 +38,8 @@ struct Texture {
     unsigned int getId() const { return id; };
     std::string getType() const;
     std::string getPath() const;
+    int getWidth() const { return width; };
+    int getHeight() const { return height; };
 
     unsigned int LoadTexture(const std::string& path);
     unsigned int LoadSkyBoxTexture(std::vector<std::string>& faces);

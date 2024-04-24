@@ -18,22 +18,26 @@ void Terrain::LoadHeightMap(const std::string& texturePath) {
     std::string specularPath = JsonConfigLoader::Read(texturePath, "specular_path");
     std::string normalPath = JsonConfigLoader::Read(texturePath, "normal_path");
     auto assetsMgr = Global::GetInstance()->GetMgr<AssetsMgr>();
-
-    int dwidth, dheight, dn;
-    unsigned char* heightMap = stbi_load(heightMapPath.c_str(), &this->width, &this->height, &this->nChannels, 0);
-    unsigned char* diffuseMap = stbi_load(diffusePath.c_str(), &dwidth, &dheight, &dn, 0);
-    if (!heightMap || !diffuseMap) {
-        std::cout << "Error: Load HeightMap Failed! \n";
-        exit(0);
-    }
+    auto comp = assetsMgr->GetShader("terrain_compute");
 
     assetsMgr->LoadTexture("terrain_diffuse", diffusePath, TextureType::DIFFUSE);
     assetsMgr->LoadTexture("terrain_specular", specularPath, TextureType::SPECULAR);
     assetsMgr->LoadTexture("terrain_normal", normalPath, TextureType::NORMAL);
+    assetsMgr->LoadTexture("terrian_height", heightMapPath, TextureType::HEIGHT);
+
+    this->width = assetsMgr->GetTexture("terrian_height")->getWidth();
+    this->height = assetsMgr->GetTexture("terrian_height")->getHeight();
 
     this->textures.push_back(*assetsMgr->GetTexture("terrain_diffuse"));
     this->textures.push_back(*assetsMgr->GetTexture("terrain_specular"));
     this->textures.push_back(*assetsMgr->GetTexture("terrain_normal"));
+
+    unsigned char* heightMap = stbi_load(heightMapPath.c_str(), &this->width, &this->height, &this->nChannels, 0);
+
+    GLuint vertexCount = this->width * this->height;
+    vertices.reserve(vertexCount);
+    indices.reserve((this->width - 1) * this->height * 2);
+    // TODO: use compute shader to calculate the vertices
 
     float yScale = 256.0f / 256.0f, yShift = 16.0f;
     for (unsigned int i = 0; i < this->height; i++) {
@@ -46,7 +50,6 @@ void Terrain::LoadHeightMap(const std::string& texturePath) {
     }
 
     stbi_image_free(heightMap);
-    stbi_image_free(diffuseMap);
 
     //  indices计算
     for (unsigned int i = 0; i < this->width - 1; i++) {

@@ -55,7 +55,7 @@ void Global::InitAssets() {
     assetsMgr->LoadShader("composite1", "assets/shaders/composite1.vsh", "assets/shaders/composite1.fsh");
     assetsMgr->LoadShader("composite2", "assets/shaders/composite2.vsh", "assets/shaders/composite2.fsh");
     //    this->GetMgr<AssetsMgr>()->LoadShader("final", "assets/shaders/final.vsh", "assets/shaders/final.fsh");
-    assetsMgr->LoadShader("triangle", "assets/shaders/triangle.vsh", "assets/shaders/triangle.fsh");
+    assetsMgr->LoadShader("terrain_compute", "assets/shaders/terrain_compute.comp");
     // 加载噪声图
     assetsMgr->LoadTexture("perlin_noise", "assets/textures/perlinNoise.png");
     // 加载模型
