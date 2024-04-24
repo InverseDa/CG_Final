@@ -7,12 +7,15 @@
 #include <unordered_map>
 #include <algorithm>
 
+constexpr bool DRAW_BUFFER_FLAG = true;
+constexpr bool READ_BUFFER_FLAG = false;
+
 struct TextureInfo {
     GLenum internalFormat;
     GLenum format;
     GLenum type;
     GLenum attachment;
-    bool isDrawBuffer = true;
+    bool flag;
     std::vector<std::pair<GLenum, GLfloat>> params;
 };
 
@@ -39,12 +42,12 @@ class FrameBuffer {
                                GLenum format,
                                GLenum type,
                                GLenum attachment,
-                               bool isDrawBuffer = true,
+                               bool flag,
                                std::vector<std::pair<GLenum, GLfloat>> params = {
                                    {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                                    {GL_TEXTURE_MAG_FILTER, GL_LINEAR},
                                }) {
-            attachments.push_back({name, TextureInfo{internalFormat, format, type, attachment, isDrawBuffer, params}});
+            attachments.push_back({name, TextureInfo{internalFormat, format, type, attachment, flag, params}});
             return *this;
         }
         std::shared_ptr<FrameBuffer> Build() {

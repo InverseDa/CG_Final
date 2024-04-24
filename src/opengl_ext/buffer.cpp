@@ -27,7 +27,7 @@ FrameBuffer::FrameBuffer(int width, int height, std::vector<std::pair<std::strin
         }
         glFramebufferTexture2D(GL_FRAMEBUFFER, textureInfo.attachment, GL_TEXTURE_2D, texture, 0);
         m_textures[name] = texture;
-        if (textureInfo.isDrawBuffer) {
+        if (textureInfo.flag) {
             m_drawBuffers.push_back(textureInfo.attachment);
         }
     }

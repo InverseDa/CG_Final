@@ -44,17 +44,17 @@ void RenderMgr::ResizeCallback() {
                        .SetAttachment("shadowmap", GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, false, GetDepthTextureParams())
                        .Build();
     this->gbuffer = FrameBuffer::Builder(width, height)
-                        .SetAttachment("position", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0)
-                        .SetAttachment("normal", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT1)
-                        .SetAttachment("albedoSpec", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT2)
-                        .SetAttachment("water", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT3)
-                        .SetAttachment("depth", GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, false, GetDepthTextureParams())
+                        .SetAttachment("position", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0, DRAW_BUFFER_FLAG)
+                        .SetAttachment("normal", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT1, DRAW_BUFFER_FLAG)
+                        .SetAttachment("albedoSpec", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT2, DRAW_BUFFER_FLAG)
+                        .SetAttachment("water", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT3, DRAW_BUFFER_FLAG)
+                        .SetAttachment("depth", GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, READ_BUFFER_FLAG, GetDepthTextureParams())
                         .Build();
     this->composite1 = FrameBuffer::Builder(width, height)
-                           .SetAttachment("position", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0)
-                           .SetAttachment("normal", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT1)
-                           .SetAttachment("albedoSpec", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT2)
-                           .SetAttachment("water", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT3)
+                           .SetAttachment("position", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0, DRAW_BUFFER_FLAG)
+                           .SetAttachment("normal", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT1, DRAW_BUFFER_FLAG)
+                           .SetAttachment("albedoSpec", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT2, DRAW_BUFFER_FLAG)
+                           .SetAttachment("water", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT3, DRAW_BUFFER_FLAG)
                            .SetAttachment("depth", GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, false, GetDepthTextureParams())
                            .Build();
 }
