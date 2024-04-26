@@ -44,13 +44,13 @@ void Terrain::LoadHeightMap(const std::string& texturePath) {
     GLuint ssbo[3];
     glGenBuffers(3, ssbo);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo[0]);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, vertexCount * sizeof(glm::vec4), nullptr, GL_DYNAMIC_COPY);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, vertexCount * sizeof(glm::vec4), nullptr, GL_DYNAMIC_READ);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo[0]);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo[1]);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, vertexCount * sizeof(glm::vec2), nullptr, GL_DYNAMIC_COPY);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, vertexCount * sizeof(glm::vec2), nullptr, GL_DYNAMIC_READ);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssbo[1]);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo[2]);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, 2 * vertexCount * sizeof(int), nullptr, GL_DYNAMIC_COPY);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, 2 * vertexCount * sizeof(int), nullptr, GL_DYNAMIC_READ);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo[2]);
 
     glDispatchCompute(this->width / 16, this->height / 16, 1);
