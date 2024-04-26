@@ -32,12 +32,45 @@ void Terrain::LoadHeightMap(const std::string& texturePath) {
     this->textures.push_back(*assetsMgr->GetTexture("terrain_specular"));
     this->textures.push_back(*assetsMgr->GetTexture("terrain_normal"));
 
-    unsigned char* heightMap = stbi_load(heightMapPath.c_str(), &this->width, &this->height, &this->nChannels, 0);
-
     GLuint vertexCount = this->width * this->height;
-    vertices.reserve(vertexCount);
-    indices.reserve((this->width - 1) * this->height * 2);
-    // TODO: use compute shader to calculate the vertices
+
+    comp->use();
+    comp->setInt("width", this->width);
+    comp->setInt("height", this->height);
+    comp->setInt("heightMap", 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, assetsMgr->GetTexture("terrain_height")->id);
+
+    GLuint ssbo[3];
+    glGenBuffers(3, ssbo);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo[0]);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, vertexCount * sizeof(glm::vec4), nullptr, GL_DYNAMIC_COPY);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo[0]);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo[1]);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, vertexCount * sizeof(glm::vec2), nullptr, GL_DYNAMIC_COPY);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssbo[1]);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo[2]);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, 2 * vertexCount * sizeof(int), nullptr, GL_DYNAMIC_COPY);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo[2]);
+
+    glDispatchCompute(this->width / 16, this->height / 16, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+    glm::vec4* tmp_vertices = new glm::vec4[vertexCount];
+    glm::vec2* tmp_texcoord = new glm::vec2[vertexCount];
+    this->indices.resize(2 * this->width * this->height);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo[0]);
+    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, vertexCount * sizeof(glm::vec4), tmp_vertices);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo[1]);
+    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, vertexCount * sizeof(glm::vec2), tmp_texcoord);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo[2]);
+    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 2 * vertexCount * sizeof(int), indices.data());
+    for (int i = 0; i < vertexCount; i++) {
+        vertices.emplace_back(tmp_vertices[i], tmp_texcoord[i]);
+    }
+
+#ifdef CPU_LOADING_HEIGHTMAP
+    unsigned char* heightMap = stbi_load(heightMapPath.c_str(), &this->width, &this->height, &this->nChannels, 0);
 
     float yScale = 256.0f / 256.0f, yShift = 16.0f;
     for (unsigned int i = 0; i < this->height; i++) {
@@ -51,14 +84,21 @@ void Terrain::LoadHeightMap(const std::string& texturePath) {
 
     stbi_image_free(heightMap);
 
-    //  indices计算
-    for (unsigned int i = 0; i < this->width - 1; i++) {
+    for (unsigned int i = 0; i < this->width; i++) {
         for (unsigned int j = 0; j < this->width; j++) {
             for (unsigned int k = 0; k < 2; k++) {
                 indices.push_back((i + k) * this->width + j);
             }
         }
     }
+    int cnt = 0;
+    for (int i = 0; i < indices.size(); i++) {
+        if (indices[i] != sindices[i]) {
+            std::cout << "indices not equal" << std::endl;
+            cnt++;
+        }
+    }
+#endif
 }
 
 void Terrain::VerticesSetup() {

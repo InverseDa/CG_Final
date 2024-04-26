@@ -33,8 +33,8 @@ void AssetsMgr::LoadShader(const std::string& name, const std::string& vertexPat
     this->shaders[name] = std::make_shared<Shader>(vertexPath, fragmentPath);
 }
 
-void AssetsMgr::LoadShader(const std::string& name, const std::string& glslPath) {
-    this->shaders[name] = std::make_shared<Shader>(glslPath);
+void AssetsMgr::LoadShader(const std::string& name, const std::string& computeShaderPath) {
+    this->shaders[name] = std::make_shared<Shader>(computeShaderPath);
 }
 
 std::shared_ptr<Shader> AssetsMgr::GetShader(const std::string& name) {

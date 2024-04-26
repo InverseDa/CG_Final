@@ -59,6 +59,6 @@ class AssetsMgr : public MgrBase {
 
     // Shader
     void LoadShader(const std::string& name, const std::string& vertexPath, const std::string& fragmentPath);
-    void LoadShader(const std::string& name, const std::string& glslPath);
+    void LoadShader(const std::string& name, const std::string& computeShaderPath);
     std::shared_ptr<Shader> GetShader(const std::string& name);
 };

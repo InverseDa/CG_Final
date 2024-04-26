@@ -11,7 +11,7 @@ class Terrain : public Model {
     int height;
     int nChannels;
     std::vector<std::pair<glm::vec3, glm::vec2>> vertices;
-    std::vector<unsigned int> indices;
+    std::vector<int> indices;
     GLuint VAO, VBO, EBO;
 
     void LoadHeightMap(const std::string& texturePath);
