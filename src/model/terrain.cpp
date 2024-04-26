@@ -1,11 +1,8 @@
-//
-// Created by miaokeda on 2023/12/6.
-//
-
 #include "model/terrain.hpp"
+#include "framework/config_loader.hpp"
+#include "framework/global_env.hpp"
 
-#include <framework/config_loader.hpp>
-#include <framework/global_env.hpp>
+#define GPU_LOADING_HEIGHTMAP
 
 Terrain::Terrain(const std::string& texturePath) : Model() {
     this->LoadHeightMap(texturePath);
@@ -23,14 +20,16 @@ void Terrain::LoadHeightMap(const std::string& texturePath) {
     assetsMgr->LoadTexture("terrain_diffuse", diffusePath, TextureType::DIFFUSE);
     assetsMgr->LoadTexture("terrain_specular", specularPath, TextureType::SPECULAR);
     assetsMgr->LoadTexture("terrain_normal", normalPath, TextureType::NORMAL);
-    assetsMgr->LoadTexture("terrain_height", heightMapPath, TextureType::HEIGHT);
-
-    this->width = assetsMgr->GetTexture("terrain_height")->getWidth();
-    this->height = assetsMgr->GetTexture("terrain_height")->getHeight();
 
     this->textures.push_back(*assetsMgr->GetTexture("terrain_diffuse"));
     this->textures.push_back(*assetsMgr->GetTexture("terrain_specular"));
     this->textures.push_back(*assetsMgr->GetTexture("terrain_normal"));
+
+#ifdef GPU_LOADING_HEIGHTMAP
+    assetsMgr->LoadTexture("terrain_height", heightMapPath, TextureType::HEIGHT);
+
+    this->width = assetsMgr->GetTexture("terrain_height")->getWidth();
+    this->height = assetsMgr->GetTexture("terrain_height")->getHeight();
 
     GLuint vertexCount = this->width * this->height;
 
@@ -68,8 +67,7 @@ void Terrain::LoadHeightMap(const std::string& texturePath) {
     for (int i = 0; i < vertexCount; i++) {
         vertices.emplace_back(tmp_vertices[i], tmp_texcoord[i]);
     }
-
-#ifdef CPU_LOADING_HEIGHTMAP
+#else
     unsigned char* heightMap = stbi_load(heightMapPath.c_str(), &this->width, &this->height, &this->nChannels, 0);
 
     float yScale = 256.0f / 256.0f, yShift = 16.0f;
@@ -89,13 +87,6 @@ void Terrain::LoadHeightMap(const std::string& texturePath) {
             for (unsigned int k = 0; k < 2; k++) {
                 indices.push_back((i + k) * this->width + j);
             }
-        }
-    }
-    int cnt = 0;
-    for (int i = 0; i < indices.size(); i++) {
-        if (indices[i] != sindices[i]) {
-            std::cout << "indices not equal" << std::endl;
-            cnt++;
         }
     }
 #endif
