@@ -2,7 +2,9 @@
 #include "framework/config_loader.hpp"
 #include "framework/global_env.hpp"
 
+#ifndef __APPLE__
 #define GPU_LOADING_HEIGHTMAP
+#endif
 
 Terrain::Terrain(const std::string& texturePath) : Model() {
     this->LoadHeightMap(texturePath);

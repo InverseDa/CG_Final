@@ -230,9 +230,19 @@ void WindowWrapper::setInputMode(int mode, int value) {
     glfwSetInputMode(window.get(), mode, value);
 }
 
-int WindowWrapper::getWidth() const { return m_width; }
+int WindowWrapper::getWidth() const {
+#ifdef __APPLE__
+    return m_width * 2;
+#endif
+    return m_width;
+}
 
-int WindowWrapper::getHeight() const { return m_height; }
+int WindowWrapper::getHeight() const {
+#ifdef __APPLE__
+    return m_height * 2;
+#endif
+    return m_height;
+}
 
 std::string WindowWrapper::getTitle() const { return m_title; }
 

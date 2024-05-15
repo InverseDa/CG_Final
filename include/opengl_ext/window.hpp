@@ -45,7 +45,11 @@ class WindowWrapper {
     createWindow(int width = 800,
                  int height = 600,
                  std::string&& title = "GLFW Window",
+#ifdef __APPLE__
+                 int major_version = 3,
+#else
                  int major_version = 4,
+#endif
                  int minor_version = 3,
                  Type type = CORE);
     // Get the raw pointer to the GLFWwindow
