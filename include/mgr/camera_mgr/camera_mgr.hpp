@@ -6,7 +6,7 @@
 class CameraMgr {
   private:
     std::shared_ptr<Camera> camera;
-    glm::mat4 projection;
+    glm::mat4 projection{};
     float near;
     float far;
 

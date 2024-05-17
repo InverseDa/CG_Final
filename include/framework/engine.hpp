@@ -15,5 +15,5 @@ class Engine {
     Engine();
     ~Engine();
 
-    void Run();
+    int Run();
 };

@@ -52,7 +52,7 @@ void Engine::SetDefaultColor() {
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void Engine::Run() {
+int Engine::Run() {
     auto ctx = Global::GetInstance();
     currentTime = std::chrono::high_resolution_clock::now();
     while (!ctx->window->shouldClose()) {
@@ -63,4 +63,5 @@ void Engine::Run() {
         ctx->window->swapBuffers();
         ctx->window->pollEvents();
     }
+    return EXIT_SUCCESS;
 }
